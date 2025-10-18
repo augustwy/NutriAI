@@ -9,5 +9,5 @@ import java.util.List;
 @Service
 public interface TextAPI {
 
-    NutritionInfo getNutritionInfo(FoodIdentification identification);
+    NutritionInfo calculateNutrition(FoodIdentification identification);
 }

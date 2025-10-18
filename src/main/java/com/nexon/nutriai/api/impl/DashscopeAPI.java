@@ -41,8 +41,14 @@ public class DashscopeAPI implements VisionAPI, TextAPI {
         this.modelListProperties = modelListProperties;
     }
 
+    /**
+     * 识别图片中的食物，并返回识别结果
+     *
+     * @param image 图片文件
+     * @return 食物识别结果
+     */
     @Override
-    public FoodIdentification identifyFood(MultipartFile image) {
+    public FoodIdentification analyzeFoodImage(MultipartFile image) {
         String prompt = """
                     请识别这张图片中的食物，并分析包含的主要食材。
                     注意米饭、面条、米线等需要列为主要食材
@@ -72,8 +78,14 @@ public class DashscopeAPI implements VisionAPI, TextAPI {
         return new FoodIdentification(jsonObject.getList("foods", String.class), jsonObject.getList("ingredients", String.class));
     }
 
+    /**
+     * 计算食物的营养信息
+     *
+     * @param identification 食物识别结果
+     * @return 营养信息
+     */
     @Override
-    public NutritionInfo getNutritionInfo(FoodIdentification identification) {
+    public NutritionInfo calculateNutrition(FoodIdentification identification) {
         String prompt = """
                     为以下食物估算营养信息：%s
                     返回JSON格式，包含热量、蛋白质、脂肪、碳水化合物，需要带上单位

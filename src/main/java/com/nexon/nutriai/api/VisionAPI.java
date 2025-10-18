@@ -7,5 +7,5 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 public interface VisionAPI {
 
-    FoodIdentification identifyFood(MultipartFile image);
+    FoodIdentification analyzeFoodImage(MultipartFile image);
 }
