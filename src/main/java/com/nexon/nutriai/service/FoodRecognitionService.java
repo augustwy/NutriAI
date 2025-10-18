@@ -24,7 +24,7 @@ public class FoodRecognitionService {
         FoodIdentification identification = visionAPI.identifyFood(image);
 
         // 调用文本API获取营养信息
-        NutritionInfo nutritionInfo = textAPI.getNutritionInfo(identification.foods());
+        NutritionInfo nutritionInfo = textAPI.getNutritionInfo(identification);
 
         return new FoodRecognitionResponse(identification.foods(), nutritionInfo);
     }

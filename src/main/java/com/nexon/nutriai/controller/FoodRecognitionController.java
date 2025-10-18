@@ -1,4 +1,4 @@
-package com.nexon.nutriai;
+package com.nexon.nutriai.controller;
 
 import com.nexon.nutriai.pojo.FoodRecognitionResponse;
 import com.nexon.nutriai.service.FoodRecognitionService;
