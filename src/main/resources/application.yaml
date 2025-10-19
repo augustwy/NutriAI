@@ -18,5 +18,5 @@ spring:
 
 
 model-list:
-  vision: qwen-vl-plus
+  vision: qwen3-vl-plus
   text: qwen-flash

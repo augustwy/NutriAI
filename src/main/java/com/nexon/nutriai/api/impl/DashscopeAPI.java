@@ -10,6 +10,7 @@ import com.nexon.nutriai.config.ModelListProperties;
 import com.nexon.nutriai.pojo.FoodIdentification;
 import com.nexon.nutriai.pojo.NutritionInfo;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.ai.chat.messages.UserMessage;
@@ -50,13 +51,43 @@ public class DashscopeAPI implements VisionAPI, TextAPI {
     @Override
     public FoodIdentification analyzeFoodImage(MultipartFile image) {
         String prompt = """
-                    请识别这张图片中的食物，并分析包含的主要食材。
-                    注意米饭、面条、米线等需要列为主要食材
-                    直接返回JSON格式，不要包含任何其他文本或格式：
-                    {
-                        "foods": ["食物1", "食物2"],
-                        "ingredients": ["食材1", "食材2"]
-                    }
+                请仔细分析这张图片中的食物，并提供准确的识别结果。
+                
+                要求：
+                1. 将可明确识别的食物列在foods数组中（如：米饭、面条、炒饭等），并估算食物的重量（单位：克，精度保留小数点后两位），如果无法估算则返回0
+                2. 将组成食物的主要食材列在ingredients数组中（如：大米、鸡蛋、青菜等），并估算其在食物中的占比，如果无法估算则返回0
+                3. 米饭、面条、米线等主食必须列在ingredients中
+                4. 只返回有效的JSON格式，不包含任何其他文本：
+                {
+                    "foods": [
+                        {
+                            name: "食物1",
+                            weight: 100.00
+                        },
+                        {
+                            name: "食物2",
+                            weight: 100.00
+                        }
+                    ],
+                    "ingredients": [
+                        {
+                            name: "食材1",
+                            food: "食物1",
+                            proportion: 100%
+                        },
+                        {
+                            name: "食材2",
+                            food: "食物2",
+                            proportion: 50%
+                        },
+                        {
+                            name: "食材3",
+                            food: "食物2",
+                            proportion: 10%
+                        }
+                    ]
+                }
+                5. 如果图片中没有包含任何食物，就返回空字符串
                 """;
         List<Media> mediaList = List.of(new Media(MimeTypeUtils.IMAGE_JPEG, image.getResource()));
         UserMessage message = UserMessage.builder().media(mediaList).text(prompt).build();
@@ -66,16 +97,15 @@ public class DashscopeAPI implements VisionAPI, TextAPI {
                 .withMultiModel(true)             // 启用多模态
                 .withVlHighResolutionImages(true) // 启用高分辨率图片处理
                 .withTemperature(0.7).build());
-        log.info("identifyFood request: {}", chatPrompt);
+        log.debug("identifyFood request: {}", chatPrompt);
         String content = dashScopeChatClient.prompt(chatPrompt).call().content();
         log.info("identifyFood response: {}", content);
-        if (content == null) {
-            return new FoodIdentification(List.of(), List.of());
+        if (StringUtils.isEmpty(content)) {
+            return null;
         }
         // 移除可能的代码块标记
         content = content.replace("```json", "").replace("```", "").trim();
-        JSONObject jsonObject = JSONObject.parseObject(content);
-        return new FoodIdentification(jsonObject.getList("foods", String.class), jsonObject.getList("ingredients", String.class));
+        return JSONObject.parseObject(content, FoodIdentification.class);
     }
 
     /**
@@ -86,23 +116,42 @@ public class DashscopeAPI implements VisionAPI, TextAPI {
      */
     @Override
     public NutritionInfo calculateNutrition(FoodIdentification identification) {
+        log.info("calculateNutrition request: {}", identification);
         String prompt = """
-                    为以下食物估算营养信息：%s
-                    返回JSON格式，包含热量、蛋白质、脂肪、碳水化合物，需要带上单位
-                    直接返回JSON格式，不要包含任何其他文本或格式：
+                基于以下食物信息，为每种食物提供详细的营养成分数据：
+                %s
+                
+                要求：
+                1. 为列表中的每一种食物分别提供营养信息
+                2. 根据食材在食物中的占比，计算所有食物的总热量(单位：kcal)
+                2. 包含四大核心营养素：热量(calorie)、蛋白质(protein)、脂肪(fat)、碳水化合物(carbohydrate)
+                3. 所有数值均以100克为基准单位
+                4. 严格按照以下JSON格式输出，不包含任何额外文本：
+                {
+                  "total_calorie": xx.x,
+                  "ingredients": [
                     {
-                        "米饭": {
-                          "热量": "116 kcal/100g",
-                          "蛋白质": "2.6 g/100g",
-                          "脂肪": "0.3 g/100g",
-                          "碳水化合物": "25.9 g/100g"
-                        }
-                }""";
-        UserMessage message = UserMessage.builder().text(prompt.formatted(identification.toString())).build();
+                        "name": "食物名称1",
+                        "calorie": "xxx kcal/100g",
+                        "protein": "x.x g/100g",
+                        "fat": "x.x g/100g",
+                        "carbohydrate": "xx.x g/100g"
+                    },
+                    {
+                      "name": "食物名称2"
+                      "calorie": "xxx kcal/100g",
+                      "protein": "x.x g/100g",
+                      "fat": "x.x g/100g",
+                      "carbohydrate": "xx.x g/100g"
+                    }
+                  ]
+                }
+                """;
+        UserMessage message = UserMessage.builder().text(prompt.formatted(buildFoodDescription(identification))).build();
 
-        Prompt chatPrompt = new Prompt(message, DashScopeChatOptions.builder().withModel(modelListProperties.getText())  // 使用视觉模型
+        Prompt chatPrompt = new Prompt(message, DashScopeChatOptions.builder().withModel(modelListProperties.getText())
                 .build());
-        log.info("identifyFood request: {}", chatPrompt);
+        log.debug("identifyFood request: {}", chatPrompt);
         String content = dashScopeChatClient.prompt(chatPrompt).call().content();
         log.info("getNutritionInfo response: {}", content);
         if (content == null) {
@@ -112,5 +161,19 @@ public class DashscopeAPI implements VisionAPI, TextAPI {
         content = content.replace("```json", "").replace("```", "").trim();
         JSONObject jsonObject = JSONObject.parseObject(content);
         return new NutritionInfo();
+    }
+
+    private static String buildFoodDescription(FoodIdentification identification) {
+        StringBuilder foods = new StringBuilder();
+        for (FoodIdentification.Food food : identification.getFoods()) {
+            foods.append(food.getName()).append(food.getWeight()).append("克");
+        }
+
+        StringBuilder ingredients = new StringBuilder();
+        for (FoodIdentification.Ingredient ingredient : identification.getIngredients()) {
+            ingredients.append(ingredient.toString()).append(";");
+        }
+
+        return "食物：" + foods + "\n食材：" + ingredients;
     }
 }

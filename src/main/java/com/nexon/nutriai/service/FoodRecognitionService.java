@@ -22,10 +22,13 @@ public class FoodRecognitionService {
     public FoodRecognitionResponse recognizeAndAnalyze(MultipartFile image) {
         // 调用视觉API识别食物
         FoodIdentification identification = visionAPI.analyzeFoodImage(image);
+        if (identification == null) {
+            return new FoodRecognitionResponse("", new NutritionInfo());
+        }
 
         // 调用文本API获取营养信息
         NutritionInfo nutritionInfo = textAPI.calculateNutrition(identification);
 
-        return new FoodRecognitionResponse(identification.foods(), nutritionInfo);
+        return new FoodRecognitionResponse("", nutritionInfo);
     }
 }
