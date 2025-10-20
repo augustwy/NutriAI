@@ -5,36 +5,34 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
-@Entity
-@Table(name = "demo")
+import java.util.Date;
+
 @Getter
 @Setter
-public class Demo {
+@Entity
+@Table(name = "eating_log", indexes = @Index(name = "phone_eating_log_idx", columnList = "phone"))
+public class EatingLog {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column
-    private String username;
+    private Long phone;
+
+    @Column(name = "eat_time")
+    private String eatTime;
 
     @Column
-    private String password;
+    private double calorie;
 
-    public Demo() {
-    }
+    @Column
+    private String food;
 
-    public Demo(String username, String password) {
-        this.username = username;
-        this.password = password;
-    }
-
-    public Demo(Long id, String username, String password) {
-        this.id = id;
-        this.username = username;
-        this.password = password;
-    }
+    @Column(name = "create_time")
+    private Date createTime;
 }
