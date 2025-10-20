@@ -16,7 +16,7 @@ import java.util.Date;
 @Table(name = "user_profile")
 public class UserProfile {
     @Id
-    private Long phone;
+    private String phone;
 
     @Column
     private double height;
@@ -30,13 +30,13 @@ public class UserProfile {
     @Column
     private char gender;
 
-    @Column
+    @Column(length = 10)
     private double bmi;
 
-    @Column
+    @Column(length = 10)
     private String bfr;
 
-    @Column(name = "eating_habits")
+    @Column(name = "eating_habits", length = 500)
     private String eatingHabits;
 
     @Column(name = "update_time")

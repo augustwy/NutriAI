@@ -24,10 +24,14 @@ spring:
     database: h2
     database-platform: org.hibernate.dialect.H2Dialect
     show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
     hibernate:
       ddl-auto: update
   datasource:
-    url: jdbc:h2:file:./data/test;DB_CLOSE_ON_EXIT=FALSE;MODE=MySQL;
+    url: jdbc:h2:file:./data/test;MODE=MySQL;
     username: sa
     password: ""
     driver-class-name: org.h2.Driver
@@ -38,8 +42,15 @@ spring:
         web-allow-others: true
       path: /h2-console
 
+logging:
+  level:
+    org.hibernate.SQL: debug
+    org.hibernate.type.descriptor.sql.BasicBinder: trace
 
 model-list:
   dashscope:
     vision: qwen3-vl-plus
     text: qwen-flash
+
+common:
+  file-path: D:/images/

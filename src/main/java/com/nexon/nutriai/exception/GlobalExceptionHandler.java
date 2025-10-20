@@ -2,11 +2,13 @@ package com.nexon.nutriai.exception;
 
 import com.nexon.nutriai.constant.ErrorCode;
 import com.nexon.nutriai.pojo.BaseResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+@Slf4j
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -24,6 +26,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<BaseResponse> handleGenericException(Exception e) {
+        log.error("handleGenericException", e);
         BaseResponse error = new BaseResponse(ErrorCode.UNKNOWN_ERROR, e.getMessage());
         return new ResponseEntity<>(error, HttpStatus.OK);
     }

@@ -13,9 +13,9 @@ import lombok.Setter;
 @Table(name = "app_user")
 public class User {
     @Id
-    private Long phone;
+    private String phone;
 
-    @Column
+    @Column(length = 30)
     private String username;
 
     @Column(name = "sso_token")

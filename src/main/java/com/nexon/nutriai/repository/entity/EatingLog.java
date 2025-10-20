@@ -1,12 +1,6 @@
 package com.nexon.nutriai.repository.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Index;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -22,7 +16,7 @@ public class EatingLog {
     private Long id;
 
     @Column
-    private Long phone;
+    private String phone;
 
     @Column(name = "eat_time")
     private String eatTime;
@@ -30,9 +24,14 @@ public class EatingLog {
     @Column
     private double calorie;
 
+    @Lob
     @Column
     private String food;
 
     @Column(name = "create_time")
     private Date createTime;
+
+    public EatingLog() {
+        this.createTime = new Date();
+    }
 }

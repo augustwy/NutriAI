@@ -11,17 +11,19 @@ import com.nexon.nutriai.constant.ErrorCode;
 import com.nexon.nutriai.constant.PromptConstant;
 import com.nexon.nutriai.exception.NutriaiException;
 import com.nexon.nutriai.pojo.FoodIdentification;
+import com.nexon.nutriai.repository.EatingLogRepository;
+import com.nexon.nutriai.repository.entity.EatingLog;
+import com.nexon.nutriai.util.ThreadLocalUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.content.Media;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.MimeTypeUtils;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -31,8 +33,9 @@ public class DashscopeAPI implements VisionAPI, TextAPI {
 
     private final ChatClient dashScopeChatClient;
     private final DashscopeModelProperties modelListProperties;
+    private final EatingLogRepository eatingLogRepository;
 
-    public DashscopeAPI(ChatModel chatModel, DashscopeModelProperties modelListProperties) {
+    public DashscopeAPI(ChatModel chatModel, DashscopeModelProperties modelListProperties, EatingLogRepository eatingLogRepository) {
         // 构造时，可以设置 ChatClient 的参数
         // {@link org.springframework.ai.chat.client.ChatClient};
         this.dashScopeChatClient = ChatClient.builder(chatModel)
@@ -42,17 +45,22 @@ public class DashscopeAPI implements VisionAPI, TextAPI {
                 .defaultOptions(DashScopeChatOptions.builder().withTopP(0.7).build()).build();
 
         this.modelListProperties = modelListProperties;
+
+        this.eatingLogRepository = eatingLogRepository;
     }
 
     /**
      * 识别图片中的食物，并返回识别结果
      *
-     * @param image 图片文件
+     * @param filePath 图片文件地址
      * @return 食物识别结果
      */
     @Override
-    public FoodIdentification analyzeFoodImage(MultipartFile image) {
-        List<Media> mediaList = List.of(new Media(MimeTypeUtils.IMAGE_JPEG, image.getResource()));
+    public FoodIdentification analyzeFoodImage(String filePath) {
+        log.info("identifyFood request: {}", filePath);
+        String phone = ThreadLocalUtil.THREAD_LOCAL_PHONE.get();
+
+        List<Media> mediaList = List.of(new Media(MimeTypeUtils.IMAGE_JPEG, new FileSystemResource(filePath)));
         UserMessage message = UserMessage.builder().media(mediaList).text(PromptConstant.IMAGE_IDENTIFY_PROMPT).build();
         message.getMetadata().put(DashScopeApiConstants.MESSAGE_FORMAT, MessageFormat.IMAGE);
 
@@ -61,14 +69,17 @@ public class DashscopeAPI implements VisionAPI, TextAPI {
                 .withVlHighResolutionImages(true) // 启用高分辨率图片处理
                 .withTemperature(0.7).build());
         log.debug("identifyFood request: {}", chatPrompt);
-        String content = dashScopeChatClient.prompt(chatPrompt).call().content();
-        log.info("identifyFood response: {}", content);
-        if (StringUtils.isEmpty(content)) {
-            throw new NutriaiException(ErrorCode.IMAGE_RECOGNITION_ERROR, "无法识别图片中的食物");
+        FoodIdentification foodIdentification = dashScopeChatClient.prompt(chatPrompt).call().entity(FoodIdentification.class);
+        log.info("identifyFood response: {}", JSONObject.toJSONString(foodIdentification));
+
+        if (foodIdentification != null) {
+            EatingLog eatingLog = new EatingLog();
+            eatingLog.setPhone(phone);
+            eatingLog.setFood(foodIdentification.toString());
+
+            eatingLogRepository.save(eatingLog);
         }
-        // 移除可能的代码块标记
-        content = content.replace("```json", "").replace("```", "").trim();
-        return JSONObject.parseObject(content, FoodIdentification.class);
+        return foodIdentification;
     }
 
     @Override

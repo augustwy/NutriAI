@@ -22,7 +22,7 @@ public class UserProfileLog {
     private Long id;
 
     @Column
-    private Long phone;
+    private String phone;
 
     @Column
     private double height;
@@ -36,13 +36,13 @@ public class UserProfileLog {
     @Column
     private char gender;
 
-    @Column
+    @Column(length = 10)
     private double bmi;
 
-    @Column
+    @Column(length = 10)
     private String bfr;
 
-    @Column(name = "eating_habits")
+    @Column(name = "eating_habits", length = 500)
     private String eatingHabits;
 
     @Column(name = "create_time")
