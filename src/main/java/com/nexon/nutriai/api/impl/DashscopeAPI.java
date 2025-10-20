@@ -155,9 +155,8 @@ public class DashscopeAPI implements VisionAPI, TextAPI {
                 
                    ---
                 
-                   > 本建议由AI生成，食物制作过程中存在差异，结果仅供参考。
+                   > _本建议由AI生成，食物制作过程存在差异，结果仅供参考。_
                 """;
-
 
         UserMessage message = UserMessage.builder()
                 .text(prompt.formatted(buildFoodDescription(identification)))
