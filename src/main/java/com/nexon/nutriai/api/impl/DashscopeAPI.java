@@ -8,6 +8,7 @@ import com.nexon.nutriai.api.TextAPI;
 import com.nexon.nutriai.api.VisionAPI;
 import com.nexon.nutriai.config.ModelListProperties;
 import com.nexon.nutriai.pojo.FoodIdentification;
+import com.nexon.nutriai.pojo.FoodNutritionInfo;
 import com.nexon.nutriai.pojo.NutritionInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -21,7 +22,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.MimeTypeUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Component
 @Slf4j
@@ -57,15 +60,18 @@ public class DashscopeAPI implements VisionAPI, TextAPI {
                 1. 将可明确识别的食物列在foods数组中（如：米饭、面条、炒饭等），并估算食物的重量（单位：克，精度保留小数点后两位），如果无法估算则返回0
                 2. 将组成食物的主要食材列在ingredients数组中（如：大米、鸡蛋、青菜等），并估算其在食物中的占比，如果无法估算则返回0
                 3. 米饭、面条、米线等主食必须列在ingredients中
-                4. 只返回有效的JSON格式，不包含任何其他文本：
+                4. 识别图片中食物的烹饪方式（cookingMethod），如：煎、炸、炒、煮、蒸、凉拌等
+                5. 只返回有效的JSON格式，不包含任何其他文本：
                 {
                     "foods": [
                         {
                             name: "食物1",
+                            cookingMethod: "炒",
                             weight: 100.00
                         },
                         {
                             name: "食物2",
+                            cookingMethod: "凉拌",
                             weight: 100.00
                         }
                     ],
@@ -87,7 +93,7 @@ public class DashscopeAPI implements VisionAPI, TextAPI {
                         }
                     ]
                 }
-                5. 如果图片中没有包含任何食物，就返回空字符串
+                6. 如果图片中没有包含任何食物，就返回空字符串
                 """;
         List<Media> mediaList = List.of(new Media(MimeTypeUtils.IMAGE_JPEG, image.getResource()));
         UserMessage message = UserMessage.builder().media(mediaList).text(prompt).build();
@@ -123,12 +129,10 @@ public class DashscopeAPI implements VisionAPI, TextAPI {
                 
                 要求：
                 1. 为列表中的每一种食物分别提供营养信息
-                2. 根据食材在食物中的占比，计算所有食物的总热量(单位：kcal)
                 2. 包含四大核心营养素：热量(calorie)、蛋白质(protein)、脂肪(fat)、碳水化合物(carbohydrate)
                 3. 所有数值均以100克为基准单位
                 4. 严格按照以下JSON格式输出，不包含任何额外文本：
                 {
-                  "total_calorie": xx.x,
                   "ingredients": [
                     {
                         "name": "食物名称1",
@@ -160,7 +164,111 @@ public class DashscopeAPI implements VisionAPI, TextAPI {
         // 移除可能的代码块标记
         content = content.replace("```json", "").replace("```", "").trim();
         JSONObject jsonObject = JSONObject.parseObject(content);
-        return new NutritionInfo();
+        NutritionInfo nutritionInfo = new NutritionInfo();
+        if (jsonObject != null && jsonObject.containsKey("ingredients")) {
+            for (Object ingredients : jsonObject.getJSONArray("ingredients")) {
+                JSONObject json = (JSONObject) ingredients;
+                NutritionInfo.Ingredient ingredient = new NutritionInfo.Ingredient();
+                ingredient.setName(json.getString("name"));
+                ingredient.setCalorie(Double.parseDouble(json.getString("calorie").replace("kcal/100g", "")));
+                ingredient.setProtein(Double.parseDouble(json.getString("protein").replace("g/100g", "")));
+                ingredient.setFat(Double.parseDouble(json.getString("fat").replace("g/100g", "")));
+                ingredient.setCarbohydrate(Double.parseDouble(json.getString("carbohydrate").replace("g/100g", "")));
+                nutritionInfo.addIngredient(ingredient);
+            }
+        }
+        log.info("getNutritionInfo response: {}", nutritionInfo);
+        return nutritionInfo;
+    }
+
+    @Override
+    public String analyzeNutrition(FoodIdentification identification, NutritionInfo nutritionInfo) {
+        log.info("analyzeNutrition request: {}, {}", identification, nutritionInfo);
+        List<FoodNutritionInfo> foodNutritionInfos = new ArrayList<>();
+        Map<String, NutritionInfo.Ingredient> nutritionInfoMap = nutritionInfo.toMap();
+        Map<String, List<FoodIdentification.Ingredient>> ingredientsMap = identification.getIngredientsMap();
+        for (FoodIdentification.Food food : identification.getFoods()) {
+            double total_calorie = 0;
+            double total_protein = 0;
+            double total_fat = 0;
+            double total_carbohydrate = 0;
+            for (FoodIdentification.Ingredient ingredient : ingredientsMap.get(food.getName())) {
+                NutritionInfo.Ingredient ingredient1 = nutritionInfoMap.get(ingredient.getName());
+                String proportion = ingredient.getProportion().replace("%", "");
+                if (ingredient1 != null) {
+                    total_calorie += ingredient1.getCalorie() * Double.parseDouble(proportion) / 100;
+                    total_protein += ingredient1.getProtein() * Double.parseDouble(proportion) / 100;
+                    total_fat += ingredient1.getFat() * Double.parseDouble(proportion) / 100;
+                    total_carbohydrate += ingredient1.getCarbohydrate() * Double.parseDouble(proportion) / 100;
+                }
+            }
+            foodNutritionInfos.add(new FoodNutritionInfo(food.getName(), food.getCookingMethod(), food.getWeight(), total_calorie, total_protein, total_fat, total_carbohydrate));
+        }
+
+        String prompt = """
+                基于以下食物信息和每100克食物中的营养元素，分析这些食物总的营养元素含量，并提供个性化的饮食建议：
+                %s
+                
+                食物营养数据：
+                %s
+                
+                要求：
+                1. 分析每种食物的总营养成分（基于实际重量计算）
+                2. 提供整体饮食的营养评估
+                3. 根据营养分析给出具体的饮食建议
+                4. 指出营养过剩或不足的方面
+                5. 严格按照以下Markdown格式输出，不包含任何额外文本：
+                
+                   # 营养分析报告
+                
+                   ## 食物详情
+                
+                   | 食物名称 | 重量(克) | 热量(千卡) | 蛋白质(克) | 脂肪(克) | 碳水化合物(克) | 营养分析 |
+                   |---------|---------|-----------|-----------|---------|---------------|---------|
+                   | {食物名称1} | {重量1} | {热量1} | {蛋白质1} | {脂肪1} | {碳水化合物1} | {该食物的营养分析} |
+                   | {食物名称2} | {重量2} | {热量2} | {蛋白质2} | {脂肪2} | {碳水化合物2} | {该食物的营养分析} |
+                
+                   ## 总体分析
+                
+                   - **总热量**: {总热量数值} 千卡
+                   - **总蛋白质**: {总蛋白质数值} 克
+                   - **总脂肪**: {总脂肪数值} 克
+                   - **总碳水化合物**: {总碳水化合物数值} 克
+                   - **营养评估**: {对整体饮食的营养评估，包括热量是否适宜、营养是否均衡等}
+                
+                   ## 饮食建议
+                
+                   1. {具体的饮食建议1，如增加某种营养素摄入}
+                   2. {具体的饮食建议2，如减少某种营养素摄入}
+                   3. {具体的饮食建议3，如搭配其他食物的建议}
+                """;
+        UserMessage message = UserMessage.builder()
+                .text(prompt.formatted(
+                        buildFoodDescription(identification),
+                        buildNutritionDataDescription(foodNutritionInfos)
+                ))
+                .build();
+
+        Prompt chatPrompt = new Prompt(message, DashScopeChatOptions.builder().withModel(modelListProperties.getText())
+                .build());
+        log.info("analyzeNutrition request: {}", chatPrompt);
+        String content = dashScopeChatClient.prompt(chatPrompt).call().content();
+        log.info("getNutritionInfo response: {}", content);
+        return content;
+    }
+
+    private String buildNutritionDataDescription(List<FoodNutritionInfo> foodNutritionInfos) {
+        StringBuilder builder = new StringBuilder();
+        for (FoodNutritionInfo foodNutritionInfo : foodNutritionInfos) {
+            builder.append("{\"name\":\"").append(foodNutritionInfo.name())
+                    .append("\",\"weight\":").append(foodNutritionInfo.weight())
+                    .append(",\"totalCalorie\":").append(foodNutritionInfo.calories())
+                    .append(",\"totalProtein\":").append(foodNutritionInfo.protein())
+                    .append(",\"totalFat\":").append(foodNutritionInfo.fat())
+                    .append(",\"totalCarbohydrate\":").append(foodNutritionInfo.carbohydrates())
+                    .append("},");
+        }
+        return builder.toString();
     }
 
     private static String buildFoodDescription(FoodIdentification identification) {
