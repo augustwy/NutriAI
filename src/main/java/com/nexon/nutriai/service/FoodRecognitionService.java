@@ -2,11 +2,11 @@ package com.nexon.nutriai.service;
 
 import com.nexon.nutriai.api.TextAPI;
 import com.nexon.nutriai.api.VisionAPI;
-import com.nexon.nutriai.config.CommonProperties;
 import com.nexon.nutriai.pojo.FoodIdentification;
 import com.nexon.nutriai.pojo.FoodRecognitionResponse;
 import com.nexon.nutriai.repository.DialogueLogRepository;
 import com.nexon.nutriai.repository.entity.DialogueLog;
+import com.nexon.nutriai.util.DateUtils;
 import com.nexon.nutriai.util.ThreadLocalUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -15,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.UUID;
 
@@ -25,18 +26,16 @@ public class FoodRecognitionService {
 
     private final VisionAPI visionAPI;
     private final TextAPI textAPI;
-    private final CommonProperties commonProperties;
     private final DialogueLogRepository dialogueLogRepository;
 
-    public FoodRecognitionService(VisionAPI visionAPI, TextAPI textAPI, CommonProperties commonProperties, DialogueLogRepository dialogueLogRepository) {
+    public FoodRecognitionService(VisionAPI visionAPI, TextAPI textAPI, DialogueLogRepository dialogueLogRepository) {
         this.visionAPI = visionAPI;
         this.textAPI = textAPI;
-        this.commonProperties = commonProperties;
         this.dialogueLogRepository = dialogueLogRepository;
     }
 
     @Transactional
-    public FoodRecognitionResponse recognizeAndAnalyze(MultipartFile image) {
+    public String recognizeAndAnalyze(MultipartFile image) {
         String requestId = String.valueOf(UUID.randomUUID());
         String phone = ThreadLocalUtil.THREAD_LOCAL_PHONE.get();
 
@@ -56,7 +55,7 @@ public class FoodRecognitionService {
 
         // 记录日志
         dialogueLogRepository.save(dialogueLog);
-        return new FoodRecognitionResponse(analyzeNutrition);
+        return analyzeNutrition;
     }
 
     /**
@@ -66,13 +65,20 @@ public class FoodRecognitionService {
      * @return 图片保存路径
      */
     public String saveImage(MultipartFile image) {
-        // 保存图片到本地存储
-        String filePath = commonProperties.getFilePath();
         try {
-            if (!Files.exists(Paths.get(filePath))) {
-                Files.createDirectories(Paths.get(filePath));
+            // 获取项目根路径
+            String projectRoot = System.getProperty("user.dir");
+
+            // 构建保存路径：项目根路径 + images目录 + 时间戳目录
+            String baseDir = projectRoot + "/images/" + DateUtils.now() + "/";
+            Path path = Paths.get(baseDir);
+
+            if (!Files.exists(path)) {
+                Files.createDirectories(path);
             }
-            filePath += image.getOriginalFilename();
+
+            // 完整文件路径
+            String filePath = baseDir + image.getOriginalFilename();
             image.transferTo(new File(filePath));
             log.info("图片保存成功, 文件路径: {}", filePath);
             return filePath;

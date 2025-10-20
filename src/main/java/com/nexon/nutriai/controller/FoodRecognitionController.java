@@ -1,6 +1,7 @@
 package com.nexon.nutriai.controller;
 
 import com.nexon.nutriai.pojo.FoodRecognitionResponse;
+import com.nexon.nutriai.pojo.RecipeResponse;
 import com.nexon.nutriai.service.FoodRecognitionService;
 import com.nexon.nutriai.util.ThreadLocalUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +25,12 @@ public class FoodRecognitionController {
     @PostMapping("/recognize")
     public ResponseEntity<FoodRecognitionResponse> recognizeFood(@RequestParam("file") MultipartFile file, @RequestParam("phone")String phone) {
         ThreadLocalUtil.THREAD_LOCAL_PHONE.set(phone);
-        FoodRecognitionResponse response = foodRecognitionService.recognizeAndAnalyze(file);
-        return ResponseEntity.ok(response);
+        String result = foodRecognitionService.recognizeAndAnalyze(file);
+        return ResponseEntity.ok(new FoodRecognitionResponse(result));
+    }
+
+    @PostMapping("/recipe")
+    public ResponseEntity<RecipeResponse> recipe() {
+        return ResponseEntity.ok(new RecipeResponse(""));
     }
 }

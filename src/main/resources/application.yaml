@@ -51,6 +51,3 @@ model-list:
   dashscope:
     vision: qwen3-vl-plus
     text: qwen-flash
-
-common:
-  file-path: D:/images/
