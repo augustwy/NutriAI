@@ -7,9 +7,9 @@ import com.alibaba.fastjson2.JSONObject;
 import com.nexon.nutriai.api.TextAPI;
 import com.nexon.nutriai.api.VisionAPI;
 import com.nexon.nutriai.config.ModelListProperties;
+import com.nexon.nutriai.constant.ErrorCode;
+import com.nexon.nutriai.exception.NutriaiException;
 import com.nexon.nutriai.pojo.FoodIdentification;
-import com.nexon.nutriai.pojo.FoodNutritionInfo;
-import com.nexon.nutriai.pojo.NutritionInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.ai.chat.client.ChatClient;
@@ -22,9 +22,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.MimeTypeUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Component
 @Slf4j
@@ -58,10 +56,11 @@ public class DashscopeAPI implements VisionAPI, TextAPI {
                 
                 要求：
                 1. 将可明确识别的食物列在foods数组中（如：米饭、面条、炒饭等），并估算食物的重量（单位：克，精度保留小数点后两位），如果无法估算则返回0
-                2. 将组成食物的主要食材列在ingredients数组中（如：大米、鸡蛋、青菜等），并估算其在食物中的占比，如果无法估算则返回0
+                2. 将组成食物的主要食材列在ingredients数组中（如：大米、鸡蛋、青菜等），并估算其在食物中的占比（%），如果无法估算则返回0
                 3. 米饭、面条、米线等主食必须列在ingredients中
                 4. 识别图片中食物的烹饪方式（cookingMethod），如：煎、炸、炒、煮、蒸、凉拌等
-                5. 只返回有效的JSON格式，不包含任何其他文本：
+                5. 如果图片中没有包含任何食物，就返回空字符串
+                6. 只返回有效的JSON格式，不包含任何其他文本：
                 {
                     "foods": [
                         {
@@ -79,21 +78,20 @@ public class DashscopeAPI implements VisionAPI, TextAPI {
                         {
                             name: "食材1",
                             food: "食物1",
-                            proportion: 100%
+                            proportion: 100
                         },
                         {
                             name: "食材2",
                             food: "食物2",
-                            proportion: 50%
+                            proportion: 50
                         },
                         {
                             name: "食材3",
                             food: "食物2",
-                            proportion: 10%
+                            proportion: 10
                         }
                     ]
                 }
-                6. 如果图片中没有包含任何食物，就返回空字符串
                 """;
         List<Media> mediaList = List.of(new Media(MimeTypeUtils.IMAGE_JPEG, image.getResource()));
         UserMessage message = UserMessage.builder().media(mediaList).text(prompt).build();
@@ -107,117 +105,30 @@ public class DashscopeAPI implements VisionAPI, TextAPI {
         String content = dashScopeChatClient.prompt(chatPrompt).call().content();
         log.info("identifyFood response: {}", content);
         if (StringUtils.isEmpty(content)) {
-            return null;
+            throw new NutriaiException(ErrorCode.IMAGE_RECOGNITION_ERROR, "无法识别图片中的食物");
         }
         // 移除可能的代码块标记
         content = content.replace("```json", "").replace("```", "").trim();
         return JSONObject.parseObject(content, FoodIdentification.class);
     }
 
-    /**
-     * 计算食物的营养信息
-     *
-     * @param identification 食物识别结果
-     * @return 营养信息
-     */
     @Override
-    public NutritionInfo calculateNutrition(FoodIdentification identification) {
-        log.info("calculateNutrition request: {}", identification);
+    public String generateNutritionReport(FoodIdentification identification) {
+        log.info("generateNutritionReport request: {}", identification);
+        if (identification == null || identification.getFoods() == null || identification.getFoods().isEmpty()) {
+            throw new NutriaiException(ErrorCode.IMAGE_RECOGNITION_ERROR, "无法识别图片中的食物");
+        }
         String prompt = """
-                基于以下食物信息，为每种食物提供详细的营养成分数据：
+                基于以下食物信息，分析这些食物的营养成分并提供详细的营养分析报告：
                 %s
                 
                 要求：
-                1. 为列表中的每一种食物分别提供营养信息
-                2. 包含四大核心营养素：热量(calorie)、蛋白质(protein)、脂肪(fat)、碳水化合物(carbohydrate)
-                3. 所有数值均以100克为基准单位
-                4. 严格按照以下JSON格式输出，不包含任何额外文本：
-                {
-                  "ingredients": [
-                    {
-                        "name": "食物名称1",
-                        "calorie": "xxx kcal/100g",
-                        "protein": "x.x g/100g",
-                        "fat": "x.x g/100g",
-                        "carbohydrate": "xx.x g/100g"
-                    },
-                    {
-                      "name": "食物名称2"
-                      "calorie": "xxx kcal/100g",
-                      "protein": "x.x g/100g",
-                      "fat": "x.x g/100g",
-                      "carbohydrate": "xx.x g/100g"
-                    }
-                  ]
-                }
-                """;
-        UserMessage message = UserMessage.builder().text(prompt.formatted(buildFoodDescription(identification))).build();
-
-        Prompt chatPrompt = new Prompt(message, DashScopeChatOptions.builder().withModel(modelListProperties.getText())
-                .build());
-        log.debug("identifyFood request: {}", chatPrompt);
-        String content = dashScopeChatClient.prompt(chatPrompt).call().content();
-        log.info("getNutritionInfo response: {}", content);
-        if (content == null) {
-            return new NutritionInfo();
-        }
-        // 移除可能的代码块标记
-        content = content.replace("```json", "").replace("```", "").trim();
-        JSONObject jsonObject = JSONObject.parseObject(content);
-        NutritionInfo nutritionInfo = new NutritionInfo();
-        if (jsonObject != null && jsonObject.containsKey("ingredients")) {
-            for (Object ingredients : jsonObject.getJSONArray("ingredients")) {
-                JSONObject json = (JSONObject) ingredients;
-                NutritionInfo.Ingredient ingredient = new NutritionInfo.Ingredient();
-                ingredient.setName(json.getString("name"));
-                ingredient.setCalorie(Double.parseDouble(json.getString("calorie").replace("kcal/100g", "")));
-                ingredient.setProtein(Double.parseDouble(json.getString("protein").replace("g/100g", "")));
-                ingredient.setFat(Double.parseDouble(json.getString("fat").replace("g/100g", "")));
-                ingredient.setCarbohydrate(Double.parseDouble(json.getString("carbohydrate").replace("g/100g", "")));
-                nutritionInfo.addIngredient(ingredient);
-            }
-        }
-        log.info("getNutritionInfo response: {}", nutritionInfo);
-        return nutritionInfo;
-    }
-
-    @Override
-    public String analyzeNutrition(FoodIdentification identification, NutritionInfo nutritionInfo) {
-        log.info("analyzeNutrition request: {}, {}", identification, nutritionInfo);
-        List<FoodNutritionInfo> foodNutritionInfos = new ArrayList<>();
-        Map<String, NutritionInfo.Ingredient> nutritionInfoMap = nutritionInfo.toMap();
-        Map<String, List<FoodIdentification.Ingredient>> ingredientsMap = identification.getIngredientsMap();
-        for (FoodIdentification.Food food : identification.getFoods()) {
-            double total_calorie = 0;
-            double total_protein = 0;
-            double total_fat = 0;
-            double total_carbohydrate = 0;
-            for (FoodIdentification.Ingredient ingredient : ingredientsMap.get(food.getName())) {
-                NutritionInfo.Ingredient ingredient1 = nutritionInfoMap.get(ingredient.getName());
-                String proportion = ingredient.getProportion().replace("%", "");
-                if (ingredient1 != null) {
-                    total_calorie += ingredient1.getCalorie() * Double.parseDouble(proportion) / 100;
-                    total_protein += ingredient1.getProtein() * Double.parseDouble(proportion) / 100;
-                    total_fat += ingredient1.getFat() * Double.parseDouble(proportion) / 100;
-                    total_carbohydrate += ingredient1.getCarbohydrate() * Double.parseDouble(proportion) / 100;
-                }
-            }
-            foodNutritionInfos.add(new FoodNutritionInfo(food.getName(), food.getCookingMethod(), food.getWeight(), total_calorie, total_protein, total_fat, total_carbohydrate));
-        }
-
-        String prompt = """
-                基于以下食物信息和每100克食物中的营养元素，分析这些食物总的营养元素含量，并提供针对这些食物的饮食建议：
-                %s
-                
-                食物营养数据：
-                %s
-                
-                要求：
-                1. 分析每种食物的总营养成分（基于实际重量计算）
-                2. 提供整体饮食的营养评估（仅基于提供的食物）
-                3. 根据营养分析给出针对这些食物的具体饮食建议
-                4. 指出这些食物在营养过剩或不足的方面
-                5. 严格按照以下Markdown格式输出，不包含任何额外文本：
+                1. 为列表中的每一种食物分别提供营养信息，包含四大核心营养素：热量、蛋白质、脂肪、碳水化合物
+                2. 所有数值均基于食物的实际重量计算
+                3. 提供整体饮食的营养评估（仅基于提供的食物）
+                4. 根据营养分析给出针对这些食物的具体饮食建议
+                5. 指出这些食物在营养过剩或不足的方面
+                6. 严格按照以下Markdown格式输出，不包含任何额外文本：
                 
                    # 营养分析报告
                 
@@ -241,45 +152,50 @@ public class DashscopeAPI implements VisionAPI, TextAPI {
                    1. {针对这些食物的具体饮食建议1，如某种食物摄入量的调整}
                    2. {针对这些食物的具体饮食建议2，如食物搭配的优化}
                    3. {针对这些食物的具体饮食建议3，如烹饪方式的建议}
+                
+                   ---
+                
+                   > 本建议由AI生成，食物制作过程中存在差异，结果仅供参考。
                 """;
+
+
         UserMessage message = UserMessage.builder()
-                .text(prompt.formatted(
-                        buildFoodDescription(identification),
-                        buildNutritionDataDescription(foodNutritionInfos)
-                ))
+                .text(prompt.formatted(buildFoodDescription(identification)))
                 .build();
 
-        Prompt chatPrompt = new Prompt(message, DashScopeChatOptions.builder().withModel(modelListProperties.getText())
+        Prompt chatPrompt = new Prompt(message, DashScopeChatOptions.builder()
+                .withModel(modelListProperties.getText())
                 .build());
-        log.info("analyzeNutrition request: {}", chatPrompt);
-        String content = dashScopeChatClient.prompt(chatPrompt).call().content();
-        log.info("getNutritionInfo response: {}", content);
-        return content;
-    }
 
-    private String buildNutritionDataDescription(List<FoodNutritionInfo> foodNutritionInfos) {
-        StringBuilder builder = new StringBuilder();
-        for (FoodNutritionInfo foodNutritionInfo : foodNutritionInfos) {
-            builder.append("{\"name\":\"").append(foodNutritionInfo.name())
-                    .append("\",\"weight\":").append(foodNutritionInfo.weight())
-                    .append(",\"totalCalorie\":").append(foodNutritionInfo.calories())
-                    .append(",\"totalProtein\":").append(foodNutritionInfo.protein())
-                    .append(",\"totalFat\":").append(foodNutritionInfo.fat())
-                    .append(",\"totalCarbohydrate\":").append(foodNutritionInfo.carbohydrates())
-                    .append("},");
-        }
-        return builder.toString();
+        log.debug("generateNutritionReport request: {}", chatPrompt);
+        String content = dashScopeChatClient.prompt(chatPrompt).call().content();
+        log.info("generateNutritionReport response: {}", content);
+        return content;
     }
 
     private static String buildFoodDescription(FoodIdentification identification) {
         StringBuilder foods = new StringBuilder();
         for (FoodIdentification.Food food : identification.getFoods()) {
-            foods.append(food.getName()).append(food.getWeight()).append("克");
+            foods.append(food.getName())
+                    .append(" ")
+                    .append(food.getWeight())
+                    .append("克 ")
+                    .append("烹饪方式：")
+                    .append(food.getCookingMethod())
+                    .append("; ");
         }
 
         StringBuilder ingredients = new StringBuilder();
         for (FoodIdentification.Ingredient ingredient : identification.getIngredients()) {
-            ingredients.append(ingredient.toString()).append(";");
+            // 对比例字段进行处理，移除或转义特殊字符
+            String cleanProportion = ingredient.getProportion().replace("%", "%%");
+            ingredients.append("食材名: ")
+                    .append(ingredient.getName())
+                    .append(", 所属食物: ")
+                    .append(ingredient.getFood())
+                    .append(", 占比: ")
+                    .append(cleanProportion)
+                    .append("; ");
         }
 
         return "食物：" + foods + "\n食材：" + ingredients;
