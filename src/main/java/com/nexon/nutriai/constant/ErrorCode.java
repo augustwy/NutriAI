@@ -3,6 +3,11 @@ package com.nexon.nutriai.constant;
 public class ErrorCode {
 
     /**
+     * 成功
+     */
+    public static final String SUCCESS = "SUCCESS";
+
+    /**
      * 未知异常
      */
     public static final String UNKNOWN_ERROR = "UNKNOWN_ERROR";
