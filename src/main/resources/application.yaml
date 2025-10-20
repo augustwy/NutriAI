@@ -18,5 +18,6 @@ spring:
 
 
 model-list:
-  vision: qwen3-vl-plus
-  text: qwen-flash
+  dashscope:
+    vision: qwen3-vl-plus
+    text: qwen-flash
