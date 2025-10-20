@@ -1,0 +1,4 @@
+控制台访问路径：http://127.0.0.1:8080/nutri-ai/h2-console
+JDBC URL：jdbc:h2:file:./data/test
+用户名：sa
+密码：

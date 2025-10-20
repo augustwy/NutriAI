@@ -15,6 +15,25 @@ spring:
     dashscope:
       chat:
         api-key: ${AI_DASHSCOPE_API_KEY}
+  jpa:
+    database: h2
+    database-platform: org.hibernate.dialect.H2Dialect
+    show-sql: true
+  datasource:
+    url: jdbc:h2:file:./data/test;DB_CLOSE_ON_EXIT=FALSE;MODE=MySQL;
+    username: sa
+    password: ""
+    driver-class-name: org.h2.Driver
+  h2:
+    console:
+      enabled: true
+      settings:
+        web-allow-others: true
+      path: /h2-console
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/schema.sql
 
 
 model-list:
