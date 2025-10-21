@@ -6,7 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @Getter
 @Setter
-@ConfigurationProperties("model-list.dashscope")
+@ConfigurationProperties("app.model-list.dashscope")
 public class DashscopeModelProperties extends ModelListProperties {
 
     private String chat;

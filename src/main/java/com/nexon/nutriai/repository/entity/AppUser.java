@@ -11,13 +11,13 @@ import lombok.Setter;
 @Setter
 @Entity
 @Table(name = "app_user")
-public class User {
+public class AppUser {
     @Id
     private String phone;
 
     @Column(length = 30)
     private String username;
 
-    @Column(name = "sso_token")
-    private String ssoToken;
+    @Column(name = "password", length = 30)
+    private String password;
 }

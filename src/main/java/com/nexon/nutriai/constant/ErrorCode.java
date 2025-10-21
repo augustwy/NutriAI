@@ -23,4 +23,17 @@ public class ErrorCode {
      * 图片识别错误
      */
     public static final String IMAGE_RECOGNITION_ERROR = "IMAGE_RECOGNITION_ERROR";
+
+
+    /*** 登录异常 ***/
+
+    /**
+     * 注册失败
+     */
+    public static final String SIGN_UP_ERROR = "SIGN_UP_ERROR";
+
+    /**
+     * 登录失败
+     */
+    public static final String SIGN_IN_ERROR = "SIGN_IN_ERROR";
 }

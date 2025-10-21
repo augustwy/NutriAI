@@ -1,4 +1,4 @@
-package com.nexon.nutriai.config;
+package com.nexon.nutriai.config.bean;
 
 import com.nexon.nutriai.repository.H2ChatMemoryRepository;
 import org.springframework.beans.factory.annotation.Value;

@@ -16,23 +16,28 @@ import jakarta.servlet.http.HttpServletResponse;
 public class HeaderInterceptor implements HandlerInterceptor {
     
     @Override
-    public boolean preHandle(HttpServletRequest request, @NotNull HttpServletResponse response, @NotNull Object handler) {
+    public boolean preHandle(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response, @NotNull Object handler) {
         MDC.clear();
         // 从请求头中获取参数并保存到ThreadLocal
         String phone = request.getHeader("phone");
         if (phone != null) {
             ThreadLocalUtil.THREAD_LOCAL_PHONE.set(phone);
         }
-        
-        // 可以保存其他需要的请求头参数
+
+        String requestId = request.getHeader("requestId");
+        if (StringUtils.isEmpty(requestId)) {
+            requestId = UUIDUtil.generateUUID();
+        }
+
+        MDC.put("REQUEST_ID", requestId);
+
         String chatId = request.getHeader("chatId");
         if (StringUtils.isEmpty(chatId)) {
-            chatId = UUIDUtil.generateUUID();
+            MDC.put("CHAT_ID", chatId);
+            ThreadLocalUtil.THREAD_LOCAL_CHAT_ID.set(chatId);
         }
-        MDC.put("CHAT_ID", chatId);
-        ThreadLocalUtil.THREAD_LOCAL_CHAT_ID.set(chatId);
 
-        log.info("请求: {}, chatId: {}", request.getRequestURL(), chatId);
+        log.info("请求: {}", request.getRequestURL());
         return true;
     }
     

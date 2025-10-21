@@ -47,8 +47,11 @@ logging:
     org.hibernate.SQL: debug
     org.hibernate.type.descriptor.sql.BasicBinder: trace
 
-model-list:
-  dashscope:
-    vision: qwen3-vl-plus
-    text: qwen-flash
-    chat: qwen-flash
+app:
+  test:
+    skip-auth-enabled: true
+  model-list:
+    dashscope:
+      vision: qwen3-vl-plus
+      text: qwen-flash
+      chat: qwen-flash
