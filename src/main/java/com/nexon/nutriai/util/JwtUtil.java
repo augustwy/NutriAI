@@ -26,6 +26,7 @@ public class JwtUtil {
     public String generateToken(String phone) {
         return JWT.create()
                 .withSubject(phone)
+                .withIssuer("NutriAI")
                 .withIssuedAt(new Date())
                 .withExpiresAt(new Date(System.currentTimeMillis() + 24 * 60 * 60 * 1000))
                 .sign(algorithm);

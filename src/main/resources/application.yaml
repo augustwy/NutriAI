@@ -54,7 +54,7 @@ app:
       text: qwen-flash
       chat: qwen-flash
   jwt:
-    secret: nutriai-jwt-secret
+    secret: 0iAKwlb7ZP4OG5qlRYCIGdrfKwNRJ6K5QhRZJqVhxf8=
     excludePaths:
       - /nutri-ai/web/user/signUp
       - /nutri-ai/web/user/signIn

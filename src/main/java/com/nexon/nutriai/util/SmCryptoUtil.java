@@ -7,13 +7,7 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
-import java.security.Key;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.Security;
-import java.security.Signature;
+import java.security.*;
 import java.security.spec.ECGenParameterSpec;
 import java.util.Base64;
 
@@ -244,5 +238,21 @@ public class SmCryptoUtil {
                     + Character.digit(hex.charAt(i + 1), 16));
         }
         return data;
+    }
+
+    public static String generateSecret() {
+        SecureRandom random = new SecureRandom();
+        byte[] secretBytes = new byte[32]; // 256位
+        random.nextBytes(secretBytes);
+        return Base64.getEncoder().encodeToString(secretBytes);
+    }
+
+    static void main() {
+        try {
+            String s = SmCryptoUtil.generateSecret();
+            System.out.println(s);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
