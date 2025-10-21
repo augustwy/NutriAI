@@ -38,12 +38,6 @@ public class HeaderInterceptor implements HandlerInterceptor {
     
     @Override
     public void afterCompletion(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response, @NotNull Object handler, Exception ex) {
-        // 将chatId放入响应头
-        String chatId = ThreadLocalUtil.THREAD_LOCAL_CHAT_ID.get();
-        if (chatId != null) {
-            response.setHeader("chatId", chatId);
-        }
-
         // 请求完成后清理ThreadLocal，防止内存泄漏
         ThreadLocalUtil.clearAll();
     }

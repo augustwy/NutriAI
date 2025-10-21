@@ -25,6 +25,8 @@ public class RecipeController {
     public Flux<String> recommend(String question, HttpServletResponse response) {
         String chatId = ThreadLocalUtil.getChatId();
 
+        // 设置响应头
+        response.setHeader("chatId", chatId);
         response.setCharacterEncoding("UTF-8");
         return recipeService.recommendRecipe(question, chatId);
     }
