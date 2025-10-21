@@ -51,3 +51,4 @@ model-list:
   dashscope:
     vision: qwen3-vl-plus
     text: qwen-flash
+    chat: qwen-flash

@@ -19,7 +19,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.UUID;
 
-
 @Slf4j
 @Service
 public class FoodRecognitionService {
@@ -36,13 +35,12 @@ public class FoodRecognitionService {
 
     @Transactional
     public String recognizeAndAnalyze(MultipartFile image) {
-        String requestId = String.valueOf(UUID.randomUUID());
-        String phone = ThreadLocalUtil.THREAD_LOCAL_PHONE.get();
+        String phone = ThreadLocalUtil.getPhone();
 
         String filePath = saveImage(image);
         DialogueLog dialogueLog = new DialogueLog();
         dialogueLog.setPhone(phone);
-        dialogueLog.setRequestId(requestId);
+        dialogueLog.setRequestId(ThreadLocalUtil.getChatId());
         dialogueLog.setQuestion("file://" + filePath);
 
         // 调用视觉API识别食物
@@ -70,7 +68,7 @@ public class FoodRecognitionService {
             String projectRoot = System.getProperty("user.dir");
 
             // 构建保存路径：项目根路径 + images目录 + 时间戳目录
-            String baseDir = projectRoot + "/images/" + DateUtils.now() + "/";
+            String baseDir = projectRoot + "/images/" + DateUtils.today() + "/";
             Path path = Paths.get(baseDir);
 
             if (!Files.exists(path)) {

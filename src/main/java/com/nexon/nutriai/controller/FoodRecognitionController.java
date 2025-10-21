@@ -4,16 +4,19 @@ import com.nexon.nutriai.pojo.FoodRecognitionResponse;
 import com.nexon.nutriai.pojo.RecipeResponse;
 import com.nexon.nutriai.service.FoodRecognitionService;
 import com.nexon.nutriai.util.ThreadLocalUtil;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.context.support.HttpRequestHandlerServlet;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
-@RequestMapping("/api/food")
+@RequestMapping("/web/food")
 public class FoodRecognitionController {
 
     private final FoodRecognitionService foodRecognitionService;
@@ -23,8 +26,7 @@ public class FoodRecognitionController {
     }
 
     @PostMapping("/recognize")
-    public ResponseEntity<FoodRecognitionResponse> recognizeFood(@RequestParam("file") MultipartFile file, @RequestParam("phone")String phone) {
-        ThreadLocalUtil.THREAD_LOCAL_PHONE.set(phone);
+    public ResponseEntity<FoodRecognitionResponse> recognizeFood(@RequestParam("file") MultipartFile file) {
         String result = foodRecognitionService.recognizeAndAnalyze(file);
         return ResponseEntity.ok(new FoodRecognitionResponse(result));
     }

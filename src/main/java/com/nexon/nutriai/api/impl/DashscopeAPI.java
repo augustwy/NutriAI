@@ -6,7 +6,7 @@ import com.alibaba.cloud.ai.dashscope.common.DashScopeApiConstants;
 import com.alibaba.fastjson2.JSONObject;
 import com.nexon.nutriai.api.TextAPI;
 import com.nexon.nutriai.api.VisionAPI;
-import com.nexon.nutriai.config.DashscopeModelProperties;
+import com.nexon.nutriai.config.properties.DashscopeModelProperties;
 import com.nexon.nutriai.constant.ErrorCode;
 import com.nexon.nutriai.constant.PromptConstant;
 import com.nexon.nutriai.exception.NutriaiException;
@@ -45,7 +45,6 @@ public class DashscopeAPI implements VisionAPI, TextAPI {
                 .defaultOptions(DashScopeChatOptions.builder().withTopP(0.7).build()).build();
 
         this.modelListProperties = modelListProperties;
-
         this.eatingLogRepository = eatingLogRepository;
     }
 
@@ -58,7 +57,7 @@ public class DashscopeAPI implements VisionAPI, TextAPI {
     @Override
     public FoodIdentification analyzeFoodImage(String filePath) {
         log.info("identifyFood request: {}", filePath);
-        String phone = ThreadLocalUtil.THREAD_LOCAL_PHONE.get();
+        String phone = ThreadLocalUtil.getPhone();
 
         List<Media> mediaList = List.of(new Media(MimeTypeUtils.IMAGE_JPEG, new FileSystemResource(filePath)));
         UserMessage message = UserMessage.builder().media(mediaList).text(PromptConstant.IMAGE_IDENTIFY_PROMPT).build();

@@ -1,4 +1,4 @@
-package com.nexon.nutriai.config;
+package com.nexon.nutriai.config.properties;
 
 import lombok.Getter;
 import lombok.Setter;
