@@ -10,6 +10,7 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
+import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatModel;
@@ -17,16 +18,19 @@ import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
+import java.util.List;
+
 @Component
 @Slf4j
 public class DashscopeChatAPI implements ChatAPI {
 
     private final ChatClient dashScopeChatClient;
+    private final ChatMemory messageWindowChatMemory;
 
 
     public DashscopeChatAPI(ChatModel chatModel, DashscopeModelProperties modelListProperties, H2ChatMemoryRepository chatMemoryRepository) {
         // 构造 ChatMemoryRepository 和 ChatMemory
-        ChatMemory chatMemory = MessageWindowChatMemory.builder()
+        this.messageWindowChatMemory = MessageWindowChatMemory.builder()
                 .chatMemoryRepository(chatMemoryRepository)
                 .maxMessages(100)
                 .build();
@@ -44,5 +48,10 @@ public class DashscopeChatAPI implements ChatAPI {
                         a -> a.param(ChatMemory.CONVERSATION_ID, chatId)
                 )
                 .stream().content();
+    }
+
+    @Override
+    public List<Message> messages(String conversationId) {
+        return messageWindowChatMemory.get(conversationId);
     }
 }

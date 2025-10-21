@@ -1,7 +1,9 @@
 package com.nexon.nutriai.config.interceptor;
 
 import com.nexon.nutriai.util.ThreadLocalUtil;
+import com.nexon.nutriai.util.UUIDUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
@@ -24,10 +26,11 @@ public class HeaderInterceptor implements HandlerInterceptor {
         
         // 可以保存其他需要的请求头参数
         String chatId = request.getHeader("chatId");
-        if (chatId != null) {
-            MDC.put("CHAT_ID", chatId);
-            ThreadLocalUtil.THREAD_LOCAL_CHAT_ID.set(chatId);
+        if (StringUtils.isEmpty(chatId)) {
+            chatId = UUIDUtil.generateUUID();
         }
+        MDC.put("CHAT_ID", chatId);
+        ThreadLocalUtil.THREAD_LOCAL_CHAT_ID.set(chatId);
 
         log.info("请求: {}, chatId: {}", request.getRequestURL(), chatId);
         return true;
@@ -35,6 +38,12 @@ public class HeaderInterceptor implements HandlerInterceptor {
     
     @Override
     public void afterCompletion(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response, @NotNull Object handler, Exception ex) {
+        // 将chatId放入响应头
+        String chatId = ThreadLocalUtil.THREAD_LOCAL_CHAT_ID.get();
+        if (chatId != null) {
+            response.setHeader("chatId", chatId);
+        }
+
         // 请求完成后清理ThreadLocal，防止内存泄漏
         ThreadLocalUtil.clearAll();
     }

@@ -3,10 +3,13 @@ package com.nexon.nutriai.controller;
 import com.nexon.nutriai.service.RecipeService;
 import com.nexon.nutriai.util.ThreadLocalUtil;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.ai.chat.messages.Message;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/web/recipe")
@@ -24,5 +27,10 @@ public class RecipeController {
 
         response.setCharacterEncoding("UTF-8");
         return recipeService.recommendRecipe(question, chatId);
+    }
+
+    @GetMapping("/messages")
+    public List<Message> messages(String chatId) {
+        return recipeService.messages(chatId);
     }
 }

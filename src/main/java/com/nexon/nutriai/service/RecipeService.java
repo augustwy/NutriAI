@@ -5,8 +5,11 @@ import com.nexon.nutriai.repository.DialogueLogRepository;
 import com.nexon.nutriai.repository.entity.DialogueLog;
 import com.nexon.nutriai.util.ThreadLocalUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.chat.messages.Message;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
+
+import java.util.List;
 
 @Slf4j
 @Service
@@ -39,6 +42,10 @@ public class RecipeService {
                     // 保存错误记录
                     saveDialogueLog(chatId, phone, question, "Error: " + error.getMessage());
                 });
+    }
+
+    public List<Message> messages(String conversationId) {
+        return chatAPI.messages(conversationId);
     }
 
     private void saveDialogueLog(String chatId, String phone, String question, String response) {
