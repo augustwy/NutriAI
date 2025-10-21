@@ -36,7 +36,7 @@ public class DashscopeChatAPI implements ChatAPI {
                 .build();
         this.dashScopeChatClient = ChatClient.builder(chatModel)
                 // 注册Advisor
-                .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
+                .defaultAdvisors(MessageChatMemoryAdvisor.builder(messageWindowChatMemory).build())
                 .defaultOptions(DashScopeChatOptions.builder().withTopP(0.7).withModel(modelListProperties.getChat()).build())
                 .build();
     }
@@ -44,9 +44,7 @@ public class DashscopeChatAPI implements ChatAPI {
     @Override
     public Flux<String> recommendRecipe(String question, String chatId) {
         return dashScopeChatClient.prompt(new Prompt(new SystemMessage(PromptConstant.RECOMMEND_RECIPE_SYSTEM_PROMPT), new UserMessage(question)))
-                .advisors(
-                        a -> a.param(ChatMemory.CONVERSATION_ID, chatId)
-                )
+                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, "recommend-recipe-" + chatId))
                 .stream().content();
     }
 
