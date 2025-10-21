@@ -22,9 +22,9 @@ public class BaseResponse<T> {
     }
 
     public BaseResponse(T data) {
-        this.code = code;
+        this.code = ErrorCode.SUCCESS;
         // todo i8n 文件转换
-        this.message = code;
+        this.message = ErrorCode.SUCCESS;
 
         this.data = data;
     }
@@ -39,6 +39,10 @@ public class BaseResponse<T> {
 
     public String getMessage() {
         return message;
+    }
+
+    public T getData() {
+        return data;
     }
 
 

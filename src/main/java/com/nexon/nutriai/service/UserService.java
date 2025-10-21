@@ -72,6 +72,8 @@ public class UserService {
 
         UserProfile userProfile = userProfileDTO.toEntity();
         userProfile.setUpdateTime(new Date());
+        double bmi = calculateBMI(userProfile.getHeight(), userProfile.getWeight());
+        userProfile.setBmi(bmi);
         // 插入或更新
         userProfileRepository.save(userProfile);
 
@@ -80,6 +82,16 @@ public class UserService {
         userProfileLogRepository.save(userProfileLog);
 
         log.info("updateUserProfile success: {}", JSONObject.toJSONString(userProfile));
+    }
+
+    public UserProfile getUserProfile(String phone) {
+        log.info("getUserProfile: {}", phone);
+        Optional<UserProfile> optional = userProfileRepository.findById(phone);
+        if (optional.isEmpty()) {
+            return null;
+        }
+        log.info("getUserProfile success: {}", JSONObject.toJSONString(optional.get()));
+        return optional.get();
     }
 
     private UserProfileLog buildUserProfileLog(UserProfile userProfile) {
@@ -93,5 +105,20 @@ public class UserService {
         userProfileLog.setBfr(userProfile.getBfr());
         userProfileLog.setEatingHabits(userProfile.getEatingHabits());
         return userProfileLog;
+    }
+
+    /**
+     * 计算BMI(简单版)
+     * @param height
+     * @param weight
+     * @return
+     */
+    private double calculateBMI(double height, double weight) {
+        if (height <= 0 || weight <= 0 || height > 300 || weight > 300) {
+            return 0;
+        }
+        height = height / 100;
+        double bmi = weight / (height * height);
+        return Math.round(bmi * 100.0) / 100.0;
     }
 }

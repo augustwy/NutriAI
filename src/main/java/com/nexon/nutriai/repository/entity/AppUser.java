@@ -18,6 +18,6 @@ public class AppUser {
     @Column(length = 30)
     private String username;
 
-    @Column(name = "password", length = 30)
+    @Column(length = 60)
     private String password;
 }

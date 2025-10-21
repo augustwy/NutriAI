@@ -1,35 +1,32 @@
 package com.nexon.nutriai.controller;
 
-import com.alibaba.fastjson2.JSONObject;
 import com.nexon.nutriai.constant.ErrorCode;
 import com.nexon.nutriai.pojo.BaseResponse;
 import com.nexon.nutriai.pojo.UserInfo;
 import com.nexon.nutriai.pojo.UserProfileDTO;
 import com.nexon.nutriai.repository.entity.AppUser;
+import com.nexon.nutriai.repository.entity.UserProfile;
 import com.nexon.nutriai.service.UserService;
-import com.nexon.nutriai.util.SmCryptoUtil;
+import com.nexon.nutriai.util.JwtUtil;
 import com.nexon.nutriai.util.ThreadLocalUtil;
-import com.nexon.nutriai.util.UUIDUtil;
-import com.nexon.nutriai.util.cache.Cache;
-import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+@Slf4j
 @RestController
 @RequestMapping("/web/user")
 public class UserController {
 
     private final UserService userService;
-    private final Cache<String, UserInfo> userCache;
-    public UserController(UserService userService, Cache<String, UserInfo> inMemoryCache) {
-        this.userService = userService;
+    private final JwtUtil jwtUtil;
 
-        this.userCache = inMemoryCache;
+    public UserController(UserService userService, JwtUtil jwtUtil) {
+        this.userService = userService;
+        this.jwtUtil = jwtUtil;
     }
+
     /**
      * 用户注册接口
      */
@@ -48,7 +45,7 @@ public class UserController {
      * 用户登录接口
      */
     @PostMapping("/signIn")
-    public ResponseEntity<BaseResponse<UserInfo>> signIn(@RequestParam String phone, @RequestParam String password, HttpSession session) {
+    public ResponseEntity<BaseResponse<UserInfo>> signIn(@RequestParam String phone, @RequestParam String password, HttpServletResponse response) {
 
         AppUser user = userService.signIn(phone, password);
         if (user == null) {
@@ -59,12 +56,8 @@ public class UserController {
         userInfo.setPhone(user.getPhone());
         userInfo.setUsername(user.getUsername());
 
-        String token = SmCryptoUtil.sm3Hash(user.getPhone() + "#" + user.getUsername());
-        userInfo.setToken(token);
-
-        userCache.put(token, userInfo, 60 * 60 * 1000);
-        // 登录成功，将用户信息存储到会话中
-        session.setAttribute("currentUser", JSONObject.toJSONString(userInfo));
+        String token = jwtUtil.generateToken(user.getPhone());
+        response.setHeader("Authorization", "Bearer " + token);
         return ResponseEntity.ok(new BaseResponse<>(userInfo));
     }
 
@@ -72,16 +65,17 @@ public class UserController {
      * 用户登出接口
      */
     @PostMapping("/logout")
-    public ResponseEntity<BaseResponse<Object>> logout(@RequestParam String phone, HttpSession session) {
-        // 清除会话中的用户信息
-        session.removeAttribute("currentUser");
-        session.invalidate();
+    public ResponseEntity<BaseResponse<Object>> logout(@RequestParam String phone) {
+        log.info("logout: {}", phone);
 
-        // 清除缓存
-        userCache.remove(phone);
-        return ResponseEntity.ok(new BaseResponse<>(ErrorCode.SUCCESS, "注册成功"));
+        return ResponseEntity.ok(new BaseResponse<>(ErrorCode.SUCCESS, "退出成功"));
     }
 
+    /**
+     * 更新用户信息
+     * @param userProfileDTO
+     * @return
+     */
     @PostMapping("/updateUserProfile")
     public ResponseEntity<BaseResponse<Object>> updateUserProfile(@RequestBody UserProfileDTO userProfileDTO) {
         String phone = ThreadLocalUtil.getPhone();
@@ -89,5 +83,16 @@ public class UserController {
         userProfileDTO.setPhone(phone);
         userService.updateUserProfile(userProfileDTO);
         return ResponseEntity.ok(new BaseResponse<>(ErrorCode.SUCCESS, "更新成功"));
+    }
+
+    /**
+     * 获取用户信息
+     * @param phone
+     * @return
+     */
+    @PostMapping("/getUserProfile")
+    public ResponseEntity<BaseResponse<Object>> getUserProfile(@RequestParam String phone) {
+        UserProfile userProfile = userService.getUserProfile(phone);
+        return ResponseEntity.ok(new BaseResponse<>(userProfile));
     }
 }
