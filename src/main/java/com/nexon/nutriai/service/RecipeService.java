@@ -23,7 +23,7 @@ public class RecipeService {
         String phone = ThreadLocalUtil.getPhone();
 
         // 获取流式响应
-        Flux<String> responseStream = chatAPI.chatRecipe(question, chatId);
+        Flux<String> responseStream = chatAPI.recommendRecipe(question, chatId);
 
         // 收集完整响应并保存
         StringBuilder completeResponse = new StringBuilder();

@@ -4,5 +4,5 @@ import reactor.core.publisher.Flux;
 
 public interface ChatAPI {
 
-    Flux<String> chatRecipe(String question, String chatId);
+    Flux<String> recommendRecipe(String question, String chatId);
 }

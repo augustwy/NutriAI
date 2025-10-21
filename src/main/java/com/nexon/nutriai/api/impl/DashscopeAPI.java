@@ -60,7 +60,7 @@ public class DashscopeAPI implements VisionAPI, TextAPI {
         String phone = ThreadLocalUtil.getPhone();
 
         List<Media> mediaList = List.of(new Media(MimeTypeUtils.IMAGE_JPEG, new FileSystemResource(filePath)));
-        UserMessage message = UserMessage.builder().media(mediaList).text(PromptConstant.IMAGE_IDENTIFY_PROMPT).build();
+        UserMessage message = UserMessage.builder().media(mediaList).text(PromptConstant.IMAGE_IDENTIFY_USER_PROMPT).build();
         message.getMetadata().put(DashScopeApiConstants.MESSAGE_FORMAT, MessageFormat.IMAGE);
 
         Prompt chatPrompt = new Prompt(message, DashScopeChatOptions.builder().withModel(modelListProperties.getVision())  // 使用视觉模型
@@ -89,7 +89,7 @@ public class DashscopeAPI implements VisionAPI, TextAPI {
         }
 
         UserMessage message = UserMessage.builder()
-                .text(PromptConstant.NUTRITION_ANALYZE_REPORT_PROMPT.formatted(buildFoodDescription(identification)))
+                .text(PromptConstant.NUTRITION_ANALYZE_REPORT_USER_PROMPT.formatted(buildFoodDescription(identification)))
                 .build();
 
         Prompt chatPrompt = new Prompt(message, DashScopeChatOptions.builder()
