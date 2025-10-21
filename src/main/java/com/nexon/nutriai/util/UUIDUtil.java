@@ -34,4 +34,8 @@ public class UUIDUtil {
         }
         return UUID.randomUUID().toString().replace("-", "").substring(0, length);
     }
+
+    static void main() {
+        System.out.println(generateUUID());
+    }
 }
