@@ -1,4 +1,4 @@
-package com.nexon.nutriai.pojo;
+package com.nexon.nutriai.pojo.dto;
 
 import com.nexon.nutriai.repository.entity.UserProfile;
 import lombok.Getter;

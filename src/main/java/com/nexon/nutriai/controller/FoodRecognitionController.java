@@ -1,6 +1,6 @@
 package com.nexon.nutriai.controller;
 
-import com.nexon.nutriai.pojo.BaseResponse;
+import com.nexon.nutriai.pojo.response.BaseResponse;
 import com.nexon.nutriai.service.FoodRecognitionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;

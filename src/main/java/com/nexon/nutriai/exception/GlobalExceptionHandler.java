@@ -1,7 +1,7 @@
 package com.nexon.nutriai.exception;
 
 import com.nexon.nutriai.constant.ErrorCode;
-import com.nexon.nutriai.pojo.BaseResponse;
+import com.nexon.nutriai.pojo.response.BaseResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

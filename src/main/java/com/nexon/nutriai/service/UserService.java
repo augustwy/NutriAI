@@ -3,11 +3,16 @@ package com.nexon.nutriai.service;
 import com.alibaba.fastjson2.JSONObject;
 import com.nexon.nutriai.constant.ErrorCode;
 import com.nexon.nutriai.exception.NutriaiException;
-import com.nexon.nutriai.pojo.UserProfileDTO;
+import com.nexon.nutriai.pojo.dto.UserHealthGoalDTO;
+import com.nexon.nutriai.pojo.dto.UserProfileDTO;
+import com.nexon.nutriai.repository.UserHealthGoalLogRepository;
+import com.nexon.nutriai.repository.UserHealthGoalRepository;
 import com.nexon.nutriai.repository.UserProfileLogRepository;
 import com.nexon.nutriai.repository.UserProfileRepository;
 import com.nexon.nutriai.repository.UserRepository;
 import com.nexon.nutriai.repository.entity.AppUser;
+import com.nexon.nutriai.repository.entity.UserHealthGoal;
+import com.nexon.nutriai.repository.entity.UserHealthGoalLog;
 import com.nexon.nutriai.repository.entity.UserProfile;
 import com.nexon.nutriai.repository.entity.UserProfileLog;
 import com.nexon.nutriai.util.PasswordUtil;
@@ -28,6 +33,8 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserProfileRepository userProfileRepository;
     private final UserProfileLogRepository userProfileLogRepository;
+    private final UserHealthGoalRepository userHealthGoalRepository;
+    private final UserHealthGoalLogRepository userHealthGoalLogRepository;
 
     public void signUp(String phone, String name, String password) {
         log.info("Sign up: {}, {}", phone, name);
@@ -91,6 +98,29 @@ public class UserService {
         return optional.get();
     }
 
+    @Transactional
+    public void updateUserHealthGoal(UserHealthGoalDTO userHealthGoalDTO) {
+        log.info("updateUserHealthGoal: {}", JSONObject.toJSONString(userHealthGoalDTO));
+
+        UserHealthGoal userHealthGoal = userHealthGoalDTO.toEntity();
+        userHealthGoal.setUpdateTime(new Date());
+        userHealthGoalRepository.save(userHealthGoal);
+
+        UserHealthGoalLog userHealthGoalLog = buildUserHealthGoalLog(userHealthGoal);
+        userHealthGoalLog.setCreateTime(userHealthGoal.getUpdateTime());
+        userHealthGoalLogRepository.save(userHealthGoalLog);
+    }
+
+    public UserHealthGoal getUserHealthGoal(String phone) {
+        log.info("getUserHealthGoal: {}", phone);
+        Optional<UserHealthGoal> optional = userHealthGoalRepository.findById(phone);
+        if (optional.isEmpty()) {
+            return null;
+        }
+        log.info("getUserHealthGoal success: {}", JSONObject.toJSONString(optional.get()));
+        return optional.get();
+    }
+
     private UserProfileLog buildUserProfileLog(UserProfile userProfile) {
         UserProfileLog userProfileLog = new UserProfileLog();
         userProfileLog.setPhone(userProfile.getPhone());
@@ -102,6 +132,14 @@ public class UserService {
         userProfileLog.setBfr(userProfile.getBfr());
         userProfileLog.setEatingHabits(userProfile.getEatingHabits());
         return userProfileLog;
+    }
+
+    private UserHealthGoalLog buildUserHealthGoalLog(UserHealthGoal userHealthGoal) {
+        UserHealthGoalLog userHealthGoalLog = new UserHealthGoalLog();
+        userHealthGoalLog.setPhone(userHealthGoal.getPhone());
+        userHealthGoalLog.setWeight(userHealthGoal.getWeight());
+        userHealthGoalLog.setBfr(userHealthGoal.getBfr());
+        return userHealthGoalLog;
     }
 
     /**

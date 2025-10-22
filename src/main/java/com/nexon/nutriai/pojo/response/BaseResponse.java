@@ -1,7 +1,6 @@
-package com.nexon.nutriai.pojo;
+package com.nexon.nutriai.pojo.response;
 
 import com.nexon.nutriai.constant.ErrorCode;
-import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Mono;
 
 public class BaseResponse<T> {

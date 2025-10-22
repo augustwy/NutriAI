@@ -5,7 +5,6 @@ import com.nexon.nutriai.api.VisionAPI;
 import com.nexon.nutriai.constant.ErrorCode;
 import com.nexon.nutriai.exception.NutriaiException;
 import com.nexon.nutriai.pojo.FoodIdentification;
-import com.nexon.nutriai.pojo.FoodRecognitionResponse;
 import com.nexon.nutriai.repository.DialogueLogRepository;
 import com.nexon.nutriai.repository.entity.DialogueLog;
 import com.nexon.nutriai.util.DateUtils;
@@ -21,7 +20,6 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.UUID;
 
 @Slf4j
 @Service

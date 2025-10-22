@@ -1,10 +1,12 @@
 package com.nexon.nutriai.controller;
 
 import com.nexon.nutriai.constant.ErrorCode;
-import com.nexon.nutriai.pojo.BaseResponse;
+import com.nexon.nutriai.pojo.dto.UserHealthGoalDTO;
+import com.nexon.nutriai.pojo.response.BaseResponse;
 import com.nexon.nutriai.pojo.UserInfo;
-import com.nexon.nutriai.pojo.UserProfileDTO;
+import com.nexon.nutriai.pojo.dto.UserProfileDTO;
 import com.nexon.nutriai.repository.entity.AppUser;
+import com.nexon.nutriai.repository.entity.UserHealthGoal;
 import com.nexon.nutriai.repository.entity.UserProfile;
 import com.nexon.nutriai.service.UserService;
 import com.nexon.nutriai.util.JwtUtil;
@@ -103,6 +105,20 @@ public class UserController {
     }
 
     /**
+     * 更新目标
+     * @param userHealthGoalDTO
+     * @return
+     */
+    @PostMapping("/updateUserHealthGoal")
+    public BaseResponse<?> updateUserHealthGoal(@RequestBody UserHealthGoalDTO userHealthGoalDTO) {
+        String phone = ThreadLocalUtil.getPhone();
+
+        userHealthGoalDTO.setPhone(phone);
+        userService.updateUserHealthGoal(userHealthGoalDTO);
+        return new BaseResponse<>(ErrorCode.SUCCESS, "更新成功");
+    }
+
+    /**
      * 获取用户信息
      * @param phone
      * @return
@@ -111,6 +127,17 @@ public class UserController {
     public BaseResponse<UserProfile> getUserProfile(@RequestParam String phone) {
         UserProfile userProfile = userService.getUserProfile(phone);
         return new BaseResponse<>(userProfile);
+    }
+
+    /**
+     * 获取用户目标
+     * @param phone
+     * @return
+     */
+    @PostMapping("/getUserHealthGoal")
+    public BaseResponse<UserHealthGoal> getUserHealthGoal(@RequestParam String phone) {
+        UserHealthGoal userHealthGoal = userService.getUserHealthGoal(phone);
+        return new BaseResponse<>(userHealthGoal);
     }
 
     private void setToken(HttpServletResponse response, Map<String, String> tokens) {
