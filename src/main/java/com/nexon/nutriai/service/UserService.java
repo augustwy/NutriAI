@@ -12,6 +12,7 @@ import com.nexon.nutriai.repository.entity.UserProfile;
 import com.nexon.nutriai.repository.entity.UserProfileLog;
 import com.nexon.nutriai.util.PasswordUtil;
 import com.nexon.nutriai.util.UUIDUtil;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,16 +22,12 @@ import java.util.Optional;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
     private final UserProfileRepository userProfileRepository;
     private final UserProfileLogRepository userProfileLogRepository;
-    public UserService(UserRepository userRepository, UserProfileRepository userProfileRepository, UserProfileLogRepository userProfileLogRepository) {
-        this.userRepository = userRepository;
-        this.userProfileRepository = userProfileRepository;
-        this.userProfileLogRepository = userProfileLogRepository;
-    }
 
     public void signUp(String phone, String name, String password) {
         log.info("Sign up: {}, {}", phone, name);

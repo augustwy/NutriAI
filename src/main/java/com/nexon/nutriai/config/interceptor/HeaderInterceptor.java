@@ -4,6 +4,7 @@ import com.nexon.nutriai.config.properties.JwtProperties;
 import com.nexon.nutriai.util.JwtUtil;
 import com.nexon.nutriai.util.ThreadLocalUtil;
 import com.nexon.nutriai.util.UUIDUtil;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -16,6 +17,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 @Component
 @Slf4j
+@RequiredArgsConstructor
 public class HeaderInterceptor implements HandlerInterceptor {
 
     @Value("${app.env:PROD}")
@@ -23,10 +25,6 @@ public class HeaderInterceptor implements HandlerInterceptor {
 
     private final JwtProperties jwtProperties;
     private final JwtUtil jwtUtil;
-    public HeaderInterceptor(JwtUtil jwtUtil, JwtProperties jwtProperties) {
-        this.jwtUtil = jwtUtil;
-        this.jwtProperties = jwtProperties;
-    }
     
     @Override
     public boolean preHandle(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response, @NotNull Object handler) throws Exception {
@@ -53,7 +51,7 @@ public class HeaderInterceptor implements HandlerInterceptor {
         }
 
         String phone = request.getHeader("phone");
-        if (!env.equals("DEV") || !isExcludePath) {
+        if (!env.equals("DEV") && !isExcludePath) {
             // 需要鉴权的路径处理逻辑
             String token = getTokenFromRequest(request);
 
@@ -93,7 +91,7 @@ public class HeaderInterceptor implements HandlerInterceptor {
     }
 
     private boolean isExcludePath(String requestURI) {
-        return jwtProperties.getExcludePaths().stream()
+        return jwtProperties.excludePaths().stream()
                 .anyMatch(path -> matchesPath(path, requestURI));
     }
 

@@ -10,6 +10,7 @@ import com.nexon.nutriai.service.UserService;
 import com.nexon.nutriai.util.JwtUtil;
 import com.nexon.nutriai.util.ThreadLocalUtil;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseCookie;
 import org.springframework.web.bind.annotation.*;
@@ -19,15 +20,11 @@ import java.util.Map;
 @Slf4j
 @RestController
 @RequestMapping("/web/user")
+@RequiredArgsConstructor
 public class UserController {
 
     private final UserService userService;
     private final JwtUtil jwtUtil;
-
-    public UserController(UserService userService, JwtUtil jwtUtil) {
-        this.userService = userService;
-        this.jwtUtil = jwtUtil;
-    }
 
     /**
      * 用户注册接口

@@ -1,30 +1,20 @@
 package com.nexon.nutriai.controller;
 
 import com.nexon.nutriai.pojo.BaseResponse;
-import com.nexon.nutriai.pojo.FoodRecognitionResponse;
-import com.nexon.nutriai.pojo.RecipeResponse;
 import com.nexon.nutriai.service.FoodRecognitionService;
-import com.nexon.nutriai.util.ThreadLocalUtil;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.context.support.HttpRequestHandlerServlet;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/web/food")
+@RequiredArgsConstructor
 public class FoodRecognitionController {
 
     private final FoodRecognitionService foodRecognitionService;
-
-    public FoodRecognitionController(FoodRecognitionService foodRecognitionService) {
-        this.foodRecognitionService = foodRecognitionService;
-    }
 
     @PostMapping("/recognize")
     public BaseResponse<String> recognizeFood(@RequestParam("file") MultipartFile file) {

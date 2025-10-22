@@ -4,6 +4,7 @@ import com.nexon.nutriai.api.ChatAPI;
 import com.nexon.nutriai.repository.DialogueLogRepository;
 import com.nexon.nutriai.repository.entity.DialogueLog;
 import com.nexon.nutriai.util.ThreadLocalUtil;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.stereotype.Service;
@@ -13,14 +14,11 @@ import java.util.List;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class RecipeService {
 
     private final ChatAPI chatAPI;
     private final DialogueLogRepository dialogueLogRepository;
-    public RecipeService(ChatAPI chatAPI, DialogueLogRepository dialogueLogRepository) {
-        this.chatAPI = chatAPI;
-        this.dialogueLogRepository = dialogueLogRepository;
-    }
 
     public Flux<String> recommendRecipe(String question, String chatId) {
         String phone = ThreadLocalUtil.getPhone();

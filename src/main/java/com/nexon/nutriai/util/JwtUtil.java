@@ -28,7 +28,7 @@ public class JwtUtil {
 
     @PostConstruct
     public void init() {
-        algorithm = Algorithm.HMAC256(jwtProperties.getSecret());
+        algorithm = Algorithm.HMAC256(jwtProperties.secret());
     }
 
     public String generateTempToken(String phone) {

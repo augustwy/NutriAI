@@ -1,6 +1,8 @@
 package com.nexon.nutriai.pojo;
 
 import com.nexon.nutriai.constant.ErrorCode;
+import reactor.core.CoreSubscriber;
+import reactor.core.publisher.Mono;
 
 public class BaseResponse<T> {
 
@@ -46,4 +48,7 @@ public class BaseResponse<T> {
     }
 
 
+    public Mono<BaseResponse<T>> toMono() {
+        return Mono.just(this);
+    }
 }
