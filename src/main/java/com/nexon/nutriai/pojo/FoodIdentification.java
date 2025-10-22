@@ -54,4 +54,32 @@ public class FoodIdentification {
         }
         return ingredientsMap;
     }
+
+    public String buildFoodDescription() {
+        StringBuilder foods = new StringBuilder();
+        for (FoodIdentification.Food food : this.getFoods()) {
+            foods.append(food.getName())
+                    .append(" ")
+                    .append(food.getWeight())
+                    .append("克 ")
+                    .append("烹饪方式：")
+                    .append(food.getCookingMethod())
+                    .append("; ");
+        }
+
+        StringBuilder ingredients = new StringBuilder();
+        for (FoodIdentification.Ingredient ingredient : this.getIngredients()) {
+            // 对比例字段进行处理，移除或转义特殊字符
+            String cleanProportion = ingredient.getProportion().replace("%", "%%");
+            ingredients.append("食材名: ")
+                    .append(ingredient.getName())
+                    .append(", 所属食物: ")
+                    .append(ingredient.getFood())
+                    .append(", 占比: ")
+                    .append(cleanProportion)
+                    .append("; ");
+        }
+
+        return "食物：" + foods + "\n食材：" + ingredients;
+    }
 }

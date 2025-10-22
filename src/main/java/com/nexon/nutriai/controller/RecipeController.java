@@ -3,6 +3,7 @@ package com.nexon.nutriai.controller;
 import com.nexon.nutriai.pojo.response.BaseResponse;
 import com.nexon.nutriai.service.RecipeService;
 import com.nexon.nutriai.util.ThreadLocalUtil;
+import com.nexon.nutriai.util.UUIDUtil;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.messages.Message;
@@ -23,6 +24,9 @@ public class RecipeController {
     @GetMapping("/recommend")
     public Flux<String> recommend(String question, HttpServletResponse response) {
         String chatId = ThreadLocalUtil.getChatId();
+        if (chatId == null) {
+            chatId = UUIDUtil.generateShortUUID(16);
+        }
 
         // 设置响应头
         response.setHeader("chatId", chatId);

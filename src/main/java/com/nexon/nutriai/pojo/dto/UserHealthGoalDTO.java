@@ -15,7 +15,7 @@ public class UserHealthGoalDTO {
 
     private String bfr;
 
-    private String goal;
+    private String healthGoal;
 
     private Date updateTime;
 
@@ -24,7 +24,7 @@ public class UserHealthGoalDTO {
         newUserHealthGoal.setPhone(phone);
         newUserHealthGoal.setWeight(weight);
         newUserHealthGoal.setBfr(bfr);
-        newUserHealthGoal.setGoal(goal);
+        newUserHealthGoal.setHealthGoal(healthGoal);
         newUserHealthGoal.setUpdateTime(updateTime);
         return newUserHealthGoal;
     }

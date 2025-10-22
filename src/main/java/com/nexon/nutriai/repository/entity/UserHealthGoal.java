@@ -24,8 +24,8 @@ public class UserHealthGoal {
     @Column(length = 10)
     private String bfr;
 
-    @Column(length = 10)
-    private String goal;
+    @Column(name = "health_goal", length = 10)
+    private String healthGoal;
 
     @Column(name = "update_time")
     private Date updateTime;

@@ -89,7 +89,7 @@ public class DashscopeAPI implements VisionAPI, TextAPI {
         }
 
         UserMessage message = UserMessage.builder()
-                .text(PromptConstant.NUTRITION_ANALYZE_REPORT_USER_PROMPT.formatted(buildFoodDescription(identification)))
+                .text(PromptConstant.NUTRITION_ANALYZE_REPORT_USER_PROMPT.formatted(identification.buildFoodDescription()))
                 .build();
 
         Prompt chatPrompt = new Prompt(message, DashScopeChatOptions.builder()
@@ -100,33 +100,5 @@ public class DashscopeAPI implements VisionAPI, TextAPI {
         String content = dashScopeChatClient.prompt(chatPrompt).call().content();
         log.info("generateNutritionReport response: {}", content);
         return content;
-    }
-
-    private static String buildFoodDescription(FoodIdentification identification) {
-        StringBuilder foods = new StringBuilder();
-        for (FoodIdentification.Food food : identification.getFoods()) {
-            foods.append(food.getName())
-                    .append(" ")
-                    .append(food.getWeight())
-                    .append("克 ")
-                    .append("烹饪方式：")
-                    .append(food.getCookingMethod())
-                    .append("; ");
-        }
-
-        StringBuilder ingredients = new StringBuilder();
-        for (FoodIdentification.Ingredient ingredient : identification.getIngredients()) {
-            // 对比例字段进行处理，移除或转义特殊字符
-            String cleanProportion = ingredient.getProportion().replace("%", "%%");
-            ingredients.append("食材名: ")
-                    .append(ingredient.getName())
-                    .append(", 所属食物: ")
-                    .append(ingredient.getFood())
-                    .append(", 占比: ")
-                    .append(cleanProportion)
-                    .append("; ");
-        }
-
-        return "食物：" + foods + "\n食材：" + ingredients;
     }
 }
