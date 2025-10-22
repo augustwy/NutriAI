@@ -1,6 +1,5 @@
 package com.nexon.nutriai.util.cache;
 
-// Cache.java
 public interface Cache<K, V> {
     
     /**

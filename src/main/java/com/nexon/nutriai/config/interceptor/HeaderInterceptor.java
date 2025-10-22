@@ -61,7 +61,9 @@ public class HeaderInterceptor implements HandlerInterceptor {
                 return false;
             }
 
-            if (!jwtUtil.validateToken(token) || jwtUtil.isRefreshToken(token)) {
+            if (jwtUtil.validateToken(token) && !jwtUtil.isRefreshToken(token)) {
+
+            } else {
                 response.setStatus(401);
                 response.getWriter().write("{\"code\":401,\"message\":\"Unauthorized\"}");
                 return false;

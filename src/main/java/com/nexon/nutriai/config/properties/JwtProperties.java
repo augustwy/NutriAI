@@ -15,9 +15,4 @@ public record JwtProperties(
             excludePaths = new ArrayList<>();
         }
     }
-
-    // 提供默认构造函数
-    public JwtProperties() {
-        this(new ArrayList<>(), null);
-    }
 }

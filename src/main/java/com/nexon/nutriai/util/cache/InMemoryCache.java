@@ -1,5 +1,6 @@
 package com.nexon.nutriai.util.cache;
 
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -9,6 +10,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 @Component
+@Primary
 public class InMemoryCache<K, V> implements Cache<K, V> {
 
     private final Map<K, CacheEntry<V>> cache = new ConcurrentHashMap<>();

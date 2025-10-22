@@ -123,7 +123,7 @@ public class UserController {
      * @param phone
      * @return
      */
-    @PostMapping("/getUserProfile")
+    @GetMapping("/getUserProfile")
     public BaseResponse<UserProfile> getUserProfile(@RequestParam String phone) {
         UserProfile userProfile = userService.getUserProfile(phone);
         return new BaseResponse<>(userProfile);
@@ -134,7 +134,7 @@ public class UserController {
      * @param phone
      * @return
      */
-    @PostMapping("/getUserHealthGoal")
+    @GetMapping("/getUserHealthGoal")
     public BaseResponse<UserHealthGoal> getUserHealthGoal(@RequestParam String phone) {
         UserHealthGoal userHealthGoal = userService.getUserHealthGoal(phone);
         return new BaseResponse<>(userHealthGoal);
