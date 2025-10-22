@@ -65,7 +65,7 @@ public class UserController {
         // 创建 HttpOnly Cookie
         ResponseCookie cookie = ResponseCookie.from("refreshToken", tokens.get("refreshToken"))
                 .httpOnly(true) // 关键！JS 无法读取
-//                .secure(true)   // 关键！只能在 HTTPS 下传输
+                .secure(true)   // 关键！只能在 HTTPS 下传输
                 .path("/")
                 .maxAge(7 * 24 * 60 * 60) // 7天
                 .sameSite("Lax")

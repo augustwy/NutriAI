@@ -31,6 +31,16 @@ public class JwtUtil {
         algorithm = Algorithm.HMAC256(jwtProperties.getSecret());
     }
 
+    public String generateTempToken(String phone) {
+        return JWT.create()
+                .withClaim("type", "access")
+                .withSubject(phone)
+                .withIssuer("NutriAI")
+                .withIssuedAt(new Date())
+                .withExpiresAt(new Date(System.currentTimeMillis() + 1000)) // 生成一个1秒的临时token
+                .sign(algorithm);
+    }
+
     public Map<String, String> generateToken(String phone) {
 
         String accessToken  = JWT.create()

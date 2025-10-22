@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,6 +17,9 @@ import jakarta.servlet.http.HttpServletResponse;
 @Component
 @Slf4j
 public class HeaderInterceptor implements HandlerInterceptor {
+
+    @Value("${app.env:PROD}")
+    private String env;
 
     private final JwtProperties jwtProperties;
     private final JwtUtil jwtUtil;
@@ -41,33 +45,37 @@ public class HeaderInterceptor implements HandlerInterceptor {
             ThreadLocalUtil.THREAD_LOCAL_CHAT_ID.set(chatId);
         }
 
+        boolean isExcludePath = false;
         String requestURI = request.getRequestURI();
         // 检查是否在配置的排除路径中
         if (isExcludePath(requestURI)) {
-            return true; // 直接放行
+            isExcludePath = true; // 直接放行
         }
 
-        // 需要鉴权的路径处理逻辑
-        String token = getTokenFromRequest(request);
+        String phone = request.getHeader("phone");
+        if (!env.equals("DEV") || !isExcludePath) {
+            // 需要鉴权的路径处理逻辑
+            String token = getTokenFromRequest(request);
 
-        if (token == null) {
-            response.setStatus(401);
-            response.getWriter().write("{\"code\":401,\"message\":\"no token\"}");
-            return false;
-        }
+            if (token == null) {
+                response.setStatus(401);
+                response.getWriter().write("{\"code\":401,\"message\":\"no token\"}");
+                return false;
+            }
 
-        if (!jwtUtil.validateToken(token) || jwtUtil.isRefreshToken(token)) {
-            response.setStatus(401);
-            response.getWriter().write("{\"code\":401,\"message\":\"Unauthorized\"}");
-            return false;
-        }
+            if (!jwtUtil.validateToken(token) || jwtUtil.isRefreshToken(token)) {
+                response.setStatus(401);
+                response.getWriter().write("{\"code\":401,\"message\":\"Unauthorized\"}");
+                return false;
+            }
 
-        // 验证通过，设置用户信息
-        String phone = jwtUtil.getSubjectFromToken(token);
-        if (phone == null) {
-            response.setStatus(401);
-            response.getWriter().write("{\"code\":401,\"message\":\"Unauthorized\"}");
-            return false;
+            // 验证通过，设置用户信息
+            String tokenPhone = jwtUtil.getSubjectFromToken(token);
+            if (phone == null || !phone.equals(tokenPhone)) {
+                response.setStatus(401);
+                response.getWriter().write("{\"code\":401,\"message\":\"Unauthorized\"}");
+                return false;
+            }
         }
         ThreadLocalUtil.THREAD_LOCAL_PHONE.set(phone);
         request.setAttribute("currentUser", phone);

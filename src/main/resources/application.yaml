@@ -43,6 +43,7 @@ logging:
     org.hibernate.type.descriptor.sql.BasicBinder: trace
 
 app:
+  env: DEV
   model-list:
     dashscope:
       vision: qwen3-vl-plus
