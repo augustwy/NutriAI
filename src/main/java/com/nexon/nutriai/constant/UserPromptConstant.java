@@ -1,6 +1,9 @@
 package com.nexon.nutriai.constant;
 
-public class PromptConstant {
+import org.springframework.ai.chat.prompt.PromptTemplate;
+import org.springframework.ai.template.st.StTemplateRenderer;
+
+public class UserPromptConstant {
 
     /**
      * 图片识别
@@ -48,9 +51,16 @@ public class PromptConstant {
             }
             """;
 
-    public static final String NUTRITION_ANALYZE_REPORT_USER_PROMPT = """
-            基于以下食物信息，分析这些食物的营养成分并提供详细的营养分析报告：
-            %s
+    private static final String NUTRITION_ANALYZE_REPORT_USER_PROMPT = """
+            请根据以下食物信息生成详细的营养分析报告：
+            ## 食物清单
+            <food_list>
+            
+            ## 食材构成
+            <ingredient_details>
+            
+            请分析以上食物的营养成分、热量估算及对健康的影响。
+            
             
             要求：
             1. 为列表中的每一种食物分别提供营养信息，包含四大核心营养素：热量、蛋白质、脂肪、碳水化合物
@@ -88,59 +98,29 @@ public class PromptConstant {
                > _本建议由AI生成，食物制作过程存在差异，结果仅供参考。_
             """;
 
-    public static final String RECOMMEND_RECIPE_SYSTEM_PROMPT = """
-            你是一个精通多种菜系的五星级大厨AI助手，请根据用户提问提供专业的烹饪指导！
-            
-            ## 角色定位
-            - 专业烹饪顾问，具备丰富的菜系知识和烹饪技巧
-            - 能够根据用户需求推荐合适的菜肴和提供详细食谱
-            - 根据用户的身体情况（如BMI、饮食习惯）个性化推荐菜谱
-            
-            ## 核心技能
-            1. 菜肴推荐：根据用户口味、食材或场合推荐合适菜品
-            2. 食谱指导：仅当用户明确指定某道具体菜肴时，才提供详细烹饪步骤
-            3. 烹饪答疑：解答用户在烹饪过程中遇到的具体问题
-            4. 健康建议：根据营养学原理提供健康饮食建议
-            
-            ## 交互原则
-            - 专注于烹饪相关话题，对无关问题要友好地引导回烹饪主题
-            - **关键规则**：只有当用户明确表示想要制作某道具体菜肴时，才输出完整菜谱
-            - 对于一般性询问（如"推荐几道川菜"、"有什么简单易做的菜"），只提供菜肴名称和简要特色描述
-            - 回答应简洁明了，步骤清晰，适合逐步流式输出
-            - 保持专业且亲和的语调，像真实大厨一样提供指导
-            - 用户信息必须通过工具调用获取，这是获取用户信息的唯一方式
-            - 如果无法获取到用户信息，相关字段留空即可，不要进行任何猜测
-            - **打招呼规则**：只有在第一次与用户交互时才需要打招呼，后续交互无需重复打招呼
-            - 跟用户打招呼时，带上用户名称（如果已获取）
-            - 根据用户的身体情况推荐菜谱
-            - 提供替代食材建议，适应不同饮食需求
-            
-            ## 输出策略
-            ### 场景1：用户询问推荐菜肴时
-            - 只列出菜肴名称
-            - 简述每道菜的特色和主要食材
-            - 说明每道菜的营养特点（如高蛋白、低脂等）
-            - 询问用户是否有感兴趣的特定菜肴
-            
-            ### 场景2：用户明确指定菜肴时
-            - 提供详细食材清单（含用量）
-            - 分步骤的烹饪指导
-            - 关键技巧和注意事项
-            - 提供营养分析（热量、蛋白质、脂肪、碳水化合物）
-            - 建议替代食材和调整方案
-            
-            ## 输出格式要求
-            - 使用清晰的标题和分段
-            - 重要信息用项目符号或编号突出
-            - 逐步引导用户完成烹饪过程
-            - 支持流式响应，确保每段信息完整且有用
-            - 不支持输出图片和音视频
-            - 包含必要的安全提示（如火候控制、食品安全）
-            - **特别注意**：不要返回查询过程或工具调用细节，只返回最终结果
+    /**
+     * 营养分析报告模板
+     * @param food_list
+     * @param ingredient_details
+     */
+    public static final PromptTemplate NUTRITION_ANALYZE_REPORT_USER_PROMPT_TEMPLATE = PromptTemplate.builder()
+            .renderer(StTemplateRenderer.builder().startDelimiterToken('<').endDelimiterToken('>').build())
+            .template(NUTRITION_ANALYZE_REPORT_USER_PROMPT)
+            .build();
+
+    private static final String RECOMMEND_RECIPE_USER_PROMPT = """
+            用户手机号：{phone}，以下是用户的提问，请你根据用户的提问做出回答：
+            |----------|
+            {question}
+            |----------|
             """;
 
-    public static final String RECOMMEND_RECIPE_USER_PROMPT = """
-            用户手机号：%s
-            用户的提问：%s
-            """;
+    /**
+     * 菜谱推荐模板
+     * @param phone
+     * @param question
+     */
+    public static final PromptTemplate RECOMMEND_RECIPE_USER_PROMPT_TEMPLATE = PromptTemplate.builder()
+            .template(RECOMMEND_RECIPE_USER_PROMPT)
+            .build();
 }

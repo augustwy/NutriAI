@@ -3,7 +3,8 @@ package com.nexon.nutriai.api.impl;
 import com.alibaba.cloud.ai.dashscope.chat.DashScopeChatOptions;
 import com.nexon.nutriai.api.ChatAPI;
 import com.nexon.nutriai.config.properties.DashscopeModelProperties;
-import com.nexon.nutriai.constant.PromptConstant;
+import com.nexon.nutriai.constant.SystemPromptConstant;
+import com.nexon.nutriai.constant.UserPromptConstant;
 import com.nexon.nutriai.mcp.UserMCPService;
 import com.nexon.nutriai.repository.H2ChatMemoryRepository;
 import com.nexon.nutriai.util.ThreadLocalUtil;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
+import java.util.Map;
 
 @Component
 @Slf4j
@@ -49,8 +51,8 @@ public class DashscopeChatAPI implements ChatAPI {
     @Override
     public Flux<String> recommendRecipe(String question, String chatId) {
         String phone = ThreadLocalUtil.getPhone();
-        return dashScopeChatClient.prompt(new Prompt(new SystemMessage(PromptConstant.RECOMMEND_RECIPE_SYSTEM_PROMPT),
-                        new UserMessage(PromptConstant.RECOMMEND_RECIPE_USER_PROMPT.formatted(phone, question))))
+        return dashScopeChatClient.prompt(new Prompt(new SystemMessage(SystemPromptConstant.RECOMMEND_RECIPE_SYSTEM_PROMPT),
+                        new UserMessage(UserPromptConstant.RECOMMEND_RECIPE_USER_PROMPT_TEMPLATE.render(Map.of("phone", phone, "question", question)))))
                 .tools(userMCPService)
                 .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, phone + "-RR-" + chatId))
                 .stream().content();

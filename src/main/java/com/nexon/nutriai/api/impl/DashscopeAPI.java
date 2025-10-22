@@ -8,7 +8,7 @@ import com.nexon.nutriai.api.TextAPI;
 import com.nexon.nutriai.api.VisionAPI;
 import com.nexon.nutriai.config.properties.DashscopeModelProperties;
 import com.nexon.nutriai.constant.ErrorCode;
-import com.nexon.nutriai.constant.PromptConstant;
+import com.nexon.nutriai.constant.UserPromptConstant;
 import com.nexon.nutriai.exception.NutriaiException;
 import com.nexon.nutriai.pojo.FoodIdentification;
 import com.nexon.nutriai.repository.EatingLogRepository;
@@ -20,12 +20,15 @@ import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.content.Media;
+import org.springframework.ai.template.st.StTemplateRenderer;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.MimeTypeUtils;
 
 import java.util.List;
+import java.util.Map;
 
 @Component
 @Slf4j
@@ -60,7 +63,7 @@ public class DashscopeAPI implements VisionAPI, TextAPI {
         String phone = ThreadLocalUtil.getPhone();
 
         List<Media> mediaList = List.of(new Media(MimeTypeUtils.IMAGE_JPEG, new FileSystemResource(filePath)));
-        UserMessage message = UserMessage.builder().media(mediaList).text(PromptConstant.IMAGE_IDENTIFY_USER_PROMPT).build();
+        UserMessage message = UserMessage.builder().media(mediaList).text(UserPromptConstant.IMAGE_IDENTIFY_USER_PROMPT).build();
         message.getMetadata().put(DashScopeApiConstants.MESSAGE_FORMAT, MessageFormat.IMAGE);
 
         Prompt chatPrompt = new Prompt(message, DashScopeChatOptions.builder().withModel(modelListProperties.getVision())  // 使用视觉模型
@@ -88,8 +91,11 @@ public class DashscopeAPI implements VisionAPI, TextAPI {
             throw new NutriaiException(ErrorCode.IMAGE_RECOGNITION_ERROR, "无法识别图片中的食物");
         }
 
+        // 获取模板参数
+        Map<String, Object> templateParams = identification.toTemplateParameters();
+        // 渲染模板
         UserMessage message = UserMessage.builder()
-                .text(PromptConstant.NUTRITION_ANALYZE_REPORT_USER_PROMPT.formatted(identification.buildFoodDescription()))
+                .text(UserPromptConstant.NUTRITION_ANALYZE_REPORT_USER_PROMPT_TEMPLATE.render(templateParams))
                 .build();
 
         Prompt chatPrompt = new Prompt(message, DashScopeChatOptions.builder()

@@ -2,12 +2,8 @@ package com.nexon.nutriai.util;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.impl.JWTParser;
-import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.auth0.jwt.interfaces.JWTPartsParser;
 import com.nexon.nutriai.config.properties.JwtProperties;
-import com.nexon.nutriai.util.cache.Cache;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
@@ -35,7 +31,7 @@ public class JwtUtil {
 
     public Map<String, String> generateToken(String phone) {
 
-        String accessToken  = JWT.create()
+        String accessToken = JWT.create()
                 .withClaim("type", "access")
                 .withSubject(phone)
                 .withIssuer("NutriAI")
