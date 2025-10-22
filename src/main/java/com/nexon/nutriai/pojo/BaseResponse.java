@@ -29,8 +29,8 @@ public class BaseResponse<T> {
         this.data = data;
     }
 
-    public static BaseResponse success() {
-        return new BaseResponse(ErrorCode.SUCCESS);
+    public static BaseResponse<Object> success() {
+        return new BaseResponse<>(ErrorCode.SUCCESS);
     }
 
     public String getCode() {

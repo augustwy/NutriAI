@@ -12,7 +12,6 @@ import com.nexon.nutriai.util.ThreadLocalUtil;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseCookie;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -34,25 +33,25 @@ public class UserController {
      * 用户注册接口
      */
     @PostMapping("/signUp")
-    public ResponseEntity<BaseResponse<Object>> register(
+    public BaseResponse<Object> register(
             @RequestParam String phone,
             @RequestParam String name,
             @RequestParam String password) {
 
         userService.signUp(phone, name, password);
 
-        return ResponseEntity.ok(new BaseResponse<>(ErrorCode.SUCCESS, "注册成功"));
+        return new BaseResponse<>(ErrorCode.SUCCESS, "注册成功");
     }
 
     /**
      * 用户登录接口
      */
     @PostMapping("/signIn")
-    public ResponseEntity<BaseResponse<UserInfo>> signIn(@RequestParam String phone, @RequestParam String password, HttpServletResponse response) {
+    public BaseResponse<UserInfo> signIn(@RequestParam String phone, @RequestParam String password, HttpServletResponse response) {
 
         AppUser user = userService.signIn(phone, password);
         if (user == null) {
-            return ResponseEntity.ok(new BaseResponse<>(ErrorCode.SIGN_IN_ERROR));
+            return new BaseResponse<>(ErrorCode.SIGN_IN_ERROR);
         }
 
         UserInfo userInfo = new UserInfo();
@@ -60,6 +59,64 @@ public class UserController {
         userInfo.setUsername(user.getUsername());
 
         Map<String, String> tokens = jwtUtil.generateToken(user.getPhone());
+        setToken(response, tokens);
+        return new BaseResponse<>(userInfo);
+    }
+
+    /**
+     * 刷新 Token 接口
+     */
+    @PostMapping("/refresh")
+    public BaseResponse<?> refresh(@CookieValue(value = "refreshToken", required = false) String refreshToken, HttpServletResponse response) {
+
+        // 1. 验证 Refresh Token 是否有效
+        if (refreshToken != null && jwtUtil.validateToken(refreshToken) && jwtUtil.isRefreshToken(refreshToken)) {
+            String phone = jwtUtil.getSubjectFromToken(refreshToken);
+            // 2. 生成新的双 Token
+            Map<String, String> newTokens = jwtUtil.generateToken(phone);
+
+            setToken(response, newTokens);
+            return BaseResponse.success();
+        }
+        return new BaseResponse<>(ErrorCode.TOKEN_REFRESH_ERROR);
+    }
+
+    /**
+     * 用户登出接口
+     */
+    @PostMapping("/logout")
+    public BaseResponse<?> logout(@RequestParam String phone) {
+        log.info("logout: {}", phone);
+
+        return new BaseResponse<>(ErrorCode.SUCCESS, "退出成功");
+    }
+
+    /**
+     * 更新用户信息
+     * @param userProfileDTO
+     * @return
+     */
+    @PostMapping("/updateUserProfile")
+    public BaseResponse<?> updateUserProfile(@RequestBody UserProfileDTO userProfileDTO) {
+        String phone = ThreadLocalUtil.getPhone();
+
+        userProfileDTO.setPhone(phone);
+        userService.updateUserProfile(userProfileDTO);
+        return new BaseResponse<>(ErrorCode.SUCCESS, "更新成功");
+    }
+
+    /**
+     * 获取用户信息
+     * @param phone
+     * @return
+     */
+    @PostMapping("/getUserProfile")
+    public BaseResponse<UserProfile> getUserProfile(@RequestParam String phone) {
+        UserProfile userProfile = userService.getUserProfile(phone);
+        return new BaseResponse<>(userProfile);
+    }
+
+    private void setToken(HttpServletResponse response, Map<String, String> tokens) {
         response.setHeader("Authorization", "Bearer " + tokens.get("accessToken"));
 
         // 创建 HttpOnly Cookie
@@ -72,57 +129,5 @@ public class UserController {
                 .build();
 
         response.addHeader("Set-Cookie", cookie.toString());
-        return ResponseEntity.ok(new BaseResponse<>(userInfo));
-    }
-
-    /**
-     * 刷新 Token 接口
-     */
-    @PostMapping("/refresh")
-    public ResponseEntity<?> refresh(@CookieValue(value = "refreshToken", required = false) String refreshToken) {
-
-        // 1. 验证 Refresh Token 是否有效
-        if (refreshToken != null && jwtUtil.validateToken(refreshToken) && jwtUtil.isRefreshToken(refreshToken)) {
-            String phone = jwtUtil.getSubjectFromToken(refreshToken);
-            // 2. 生成新的双 Token
-            Map<String, String> newTokens = jwtUtil.generateToken(phone);
-            return ResponseEntity.ok(newTokens);
-        }
-        return ResponseEntity.status(401).body("无效的 Refresh Token");
-    }
-
-    /**
-     * 用户登出接口
-     */
-    @PostMapping("/logout")
-    public ResponseEntity<BaseResponse<Object>> logout(@RequestParam String phone) {
-        log.info("logout: {}", phone);
-
-        return ResponseEntity.ok(new BaseResponse<>(ErrorCode.SUCCESS, "退出成功"));
-    }
-
-    /**
-     * 更新用户信息
-     * @param userProfileDTO
-     * @return
-     */
-    @PostMapping("/updateUserProfile")
-    public ResponseEntity<BaseResponse<Object>> updateUserProfile(@RequestBody UserProfileDTO userProfileDTO) {
-        String phone = ThreadLocalUtil.getPhone();
-
-        userProfileDTO.setPhone(phone);
-        userService.updateUserProfile(userProfileDTO);
-        return ResponseEntity.ok(new BaseResponse<>(ErrorCode.SUCCESS, "更新成功"));
-    }
-
-    /**
-     * 获取用户信息
-     * @param phone
-     * @return
-     */
-    @PostMapping("/getUserProfile")
-    public ResponseEntity<BaseResponse<Object>> getUserProfile(@RequestParam String phone) {
-        UserProfile userProfile = userService.getUserProfile(phone);
-        return ResponseEntity.ok(new BaseResponse<>(userProfile));
     }
 }

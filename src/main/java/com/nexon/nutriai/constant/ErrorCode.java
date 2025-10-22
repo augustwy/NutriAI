@@ -36,4 +36,6 @@ public class ErrorCode {
      * 登录失败
      */
     public static final String SIGN_IN_ERROR = "SIGN_IN_ERROR";
+
+    public static final String TOKEN_REFRESH_ERROR = "TOKEN_REFRESH_ERROR";
 }

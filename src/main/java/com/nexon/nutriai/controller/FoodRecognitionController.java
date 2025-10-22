@@ -1,5 +1,6 @@
 package com.nexon.nutriai.controller;
 
+import com.nexon.nutriai.pojo.BaseResponse;
 import com.nexon.nutriai.pojo.FoodRecognitionResponse;
 import com.nexon.nutriai.pojo.RecipeResponse;
 import com.nexon.nutriai.service.FoodRecognitionService;
@@ -26,13 +27,8 @@ public class FoodRecognitionController {
     }
 
     @PostMapping("/recognize")
-    public ResponseEntity<FoodRecognitionResponse> recognizeFood(@RequestParam("file") MultipartFile file) {
+    public BaseResponse<String> recognizeFood(@RequestParam("file") MultipartFile file) {
         String result = foodRecognitionService.recognizeAndAnalyze(file);
-        return ResponseEntity.ok(new FoodRecognitionResponse(result));
-    }
-
-    @PostMapping("/recipe")
-    public ResponseEntity<RecipeResponse> recipe() {
-        return ResponseEntity.ok(new RecipeResponse(""));
+        return new BaseResponse<>(result);
     }
 }

@@ -1,5 +1,6 @@
 package com.nexon.nutriai.controller;
 
+import com.nexon.nutriai.pojo.BaseResponse;
 import com.nexon.nutriai.service.RecipeService;
 import com.nexon.nutriai.util.ThreadLocalUtil;
 import jakarta.servlet.http.HttpServletResponse;
@@ -32,7 +33,7 @@ public class RecipeController {
     }
 
     @GetMapping("/messages")
-    public List<Message> messages(String chatId) {
-        return recipeService.messages(chatId);
+    public BaseResponse<List<Message>> messages(String chatId) {
+        return new BaseResponse<>(recipeService.messages(chatId));
     }
 }
