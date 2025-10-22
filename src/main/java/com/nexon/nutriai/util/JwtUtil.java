@@ -27,25 +27,13 @@ public class JwtUtil {
     private static final long REFRESH_TOKEN_EXPIRATION = 7 * 24 * 60 * 60 * 1000; // 7天
 
     private final JwtProperties jwtProperties;
-    private final Cache<String, Long> usedTokens;
 
     @PostConstruct
     public void init() {
         algorithm = Algorithm.HMAC256(jwtProperties.secret());
     }
 
-    public String generateTempToken(String phone) {
-        return JWT.create()
-                .withClaim("type", "access")
-                .withSubject(phone)
-                .withIssuer("NutriAI")
-                .withIssuedAt(new Date())
-                .withExpiresAt(new Date(System.currentTimeMillis() + 1000)) // 生成一个1秒的临时token
-                .sign(algorithm);
-    }
-
     public Map<String, String> generateToken(String phone) {
-        String jti = UUIDUtil.generateUUID(); // 生成唯一标识
 
         String accessToken  = JWT.create()
                 .withClaim("type", "access")
@@ -53,7 +41,7 @@ public class JwtUtil {
                 .withIssuer("NutriAI")
                 .withIssuedAt(new Date())
                 .withExpiresAt(new Date(System.currentTimeMillis() + ACCESS_TOKEN_EXPIRATION))
-                .withJWTId(jti)
+                .withJWTId(UUIDUtil.generateUUID())
                 .sign(algorithm);
 
         String refreshToken = JWT.create()
@@ -62,6 +50,7 @@ public class JwtUtil {
                 .withIssuer("NutriAI")
                 .withIssuedAt(new Date())
                 .withExpiresAt(new Date(System.currentTimeMillis() + REFRESH_TOKEN_EXPIRATION))
+                .withJWTId(UUIDUtil.generateUUID())
                 .sign(algorithm);
 
         Map<String, String> tokens = new HashMap<>();
