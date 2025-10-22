@@ -11,8 +11,11 @@ import com.nexon.nutriai.util.JwtUtil;
 import com.nexon.nutriai.util.ThreadLocalUtil;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -56,9 +59,36 @@ public class UserController {
         userInfo.setPhone(user.getPhone());
         userInfo.setUsername(user.getUsername());
 
-        String token = jwtUtil.generateToken(user.getPhone());
-        response.setHeader("Authorization", "Bearer " + token);
+        Map<String, String> tokens = jwtUtil.generateToken(user.getPhone());
+        response.setHeader("Authorization", "Bearer " + tokens.get("accessToken"));
+
+        // 创建 HttpOnly Cookie
+        ResponseCookie cookie = ResponseCookie.from("refreshToken", tokens.get("refreshToken"))
+                .httpOnly(true) // 关键！JS 无法读取
+//                .secure(true)   // 关键！只能在 HTTPS 下传输
+                .path("/")
+                .maxAge(7 * 24 * 60 * 60) // 7天
+                .sameSite("Lax")
+                .build();
+
+        response.addHeader("Set-Cookie", cookie.toString());
         return ResponseEntity.ok(new BaseResponse<>(userInfo));
+    }
+
+    /**
+     * 刷新 Token 接口
+     */
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refresh(@CookieValue(value = "refreshToken", required = false) String refreshToken) {
+
+        // 1. 验证 Refresh Token 是否有效
+        if (refreshToken != null && jwtUtil.validateToken(refreshToken) && jwtUtil.isRefreshToken(refreshToken)) {
+            String phone = jwtUtil.getSubjectFromToken(refreshToken);
+            // 2. 生成新的双 Token
+            Map<String, String> newTokens = jwtUtil.generateToken(phone);
+            return ResponseEntity.ok(newTokens);
+        }
+        return ResponseEntity.status(401).body("无效的 Refresh Token");
     }
 
     /**

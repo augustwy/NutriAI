@@ -8,14 +8,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.MDC;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
-import java.io.IOException;
 
 @Component
 @Slf4j
@@ -56,21 +52,21 @@ public class HeaderInterceptor implements HandlerInterceptor {
 
         if (token == null) {
             response.setStatus(401);
-            response.getWriter().write("{\"code\":401,\"message\":\"缺少token\"}");
+            response.getWriter().write("{\"code\":401,\"message\":\"no token\"}");
             return false;
         }
 
-        if (!jwtUtil.validateToken(token)) {
+        if (!jwtUtil.validateToken(token) || jwtUtil.isRefreshToken(token)) {
             response.setStatus(401);
-            response.getWriter().write("{\"code\":401,\"message\":\"token无效或已过期\"}");
+            response.getWriter().write("{\"code\":401,\"message\":\"Unauthorized\"}");
             return false;
         }
 
         // 验证通过，设置用户信息
-        String phone = jwtUtil.getUsernameFromToken(token);
+        String phone = jwtUtil.getSubjectFromToken(token);
         if (phone == null) {
             response.setStatus(401);
-            response.getWriter().write("{\"code\":401,\"message\":\"token无效或已过期\"}");
+            response.getWriter().write("{\"code\":401,\"message\":\"Unauthorized\"}");
             return false;
         }
         ThreadLocalUtil.THREAD_LOCAL_PHONE.set(phone);
@@ -127,9 +123,6 @@ public class HeaderInterceptor implements HandlerInterceptor {
      */
     private void checkPermission(HttpServletRequest request, String username) {
         // 这里可以根据用户名和请求路径进行权限检查
-        // 比如某些接口只允许管理员访问
-        if (request.getRequestURI().startsWith("/api/admin") && !"admin".equals(username)) {
-            throw new RuntimeException("权限不足");
-        }
+
     }
 }

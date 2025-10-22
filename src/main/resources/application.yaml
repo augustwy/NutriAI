@@ -12,11 +12,6 @@ spring:
     chat:
       client:
         enabled: false
-      memory:
-        repository:
-          jdbc:
-            initialize-schema: embedded # 仅用于嵌入式数据库(默认)
-            schema: file:./data/test
     dashscope:
       chat:
         api-key: ${AI_DASHSCOPE_API_KEY}

@@ -11,5 +11,4 @@ public class UserInfo {
 
     private String username;
 
-    private String token;
 }
