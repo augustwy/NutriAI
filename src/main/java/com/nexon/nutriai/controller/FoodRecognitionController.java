@@ -1,5 +1,6 @@
 package com.nexon.nutriai.controller;
 
+import com.nexon.nutriai.constant.ErrorCode;
 import com.nexon.nutriai.pojo.response.BaseResponse;
 import com.nexon.nutriai.service.FoodRecognitionService;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,8 @@ public class FoodRecognitionController {
     @PostMapping("/recognize")
     public BaseResponse<String> recognizeFood(@RequestParam("file") MultipartFile file) {
         String result = foodRecognitionService.recognizeAndAnalyze(file);
-        return new BaseResponse<>(result);
+        BaseResponse<String> success = new BaseResponse<>(ErrorCode.SUCCESS);
+        success.setData(result);
+        return success;
     }
 }

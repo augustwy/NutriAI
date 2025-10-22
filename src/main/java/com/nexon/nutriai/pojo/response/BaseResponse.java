@@ -46,6 +46,10 @@ public class BaseResponse<T> {
         return data;
     }
 
+    public void setData(T data) {
+        this.data = data;
+    }
+
 
     public Mono<BaseResponse<T>> toMono() {
         return Mono.just(this);
