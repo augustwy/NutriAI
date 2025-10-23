@@ -7,6 +7,8 @@ import java.util.List;
 
 public interface ChatAPI {
 
+    String getModel();
+
     /**
      * 菜谱推荐
      * @param question

@@ -4,19 +4,13 @@ import com.nexon.nutriai.api.ChatAPI;
 import com.nexon.nutriai.pojo.ChatHistory;
 import com.nexon.nutriai.repository.DialogueLogRepository;
 import com.nexon.nutriai.repository.entity.DialogueLog;
-import com.nexon.nutriai.util.ThreadLocalUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.messages.AssistantMessage;
-import org.springframework.ai.chat.messages.Message;
-import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Objects;
 
 @Slf4j
@@ -27,8 +21,11 @@ public class RecipeService {
     private final ChatAPI chatAPI;
     private final DialogueLogRepository dialogueLogRepository;
 
-    public Flux<String> recommendRecipe(String question, String chatId) {
-        String phone = ThreadLocalUtil.getPhone();
+    public String getChatModel() {
+        return chatAPI.getModel();
+    }
+
+    public Flux<String> recommendRecipe(String phone, String question, String chatId) {
 
         // 获取流式响应
         Flux<String> responseStream = chatAPI.recommendRecipe(question, chatId);

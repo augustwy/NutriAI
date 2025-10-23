@@ -35,8 +35,10 @@ public class DashscopeChatAPI implements ChatAPI {
     private final UserTools userTools;
     private final TimeTools timeTools;
 
+    private String model;
 
     public DashscopeChatAPI(ChatModel chatModel, DashscopeModelProperties modelListProperties, H2ChatMemoryRepository h2ChatMemoryRepository, ChatMemoryRepository chatMemoryRepository, UserTools userTools, TimeTools timeTools) {
+        this.model = modelListProperties.getChat();
         // 构造 ChatMemoryRepository 和 ChatMemory
         this.messageWindowChatMemory = MessageWindowChatMemory.builder()
                 .chatMemoryRepository(h2ChatMemoryRepository)
@@ -45,7 +47,7 @@ public class DashscopeChatAPI implements ChatAPI {
         this.dashScopeChatClient = ChatClient.builder(chatModel)
                 // 注册Advisor
                 .defaultAdvisors(MessageChatMemoryAdvisor.builder(messageWindowChatMemory).build())
-                .defaultOptions(DashScopeChatOptions.builder().withTopP(0.7).withModel(modelListProperties.getChat()).build())
+                .defaultOptions(DashScopeChatOptions.builder().withTopP(0.7).withModel(model).build())
                 .build();
 
         this.userTools = userTools;
@@ -54,13 +56,19 @@ public class DashscopeChatAPI implements ChatAPI {
     }
 
     @Override
+    public String getModel() {
+        return model;
+    }
+
+    @Override
     public Flux<String> recommendRecipe(String question, String chatId) {
         String phone = ThreadLocalUtil.getPhone();
         return dashScopeChatClient.prompt(new Prompt(new SystemMessage(PromptConstant.RECOMMEND_RECIPE_SYSTEM_PROMPT),
                         new UserMessage(PromptConstant.RECOMMEND_RECIPE_USER_PROMPT_TEMPLATE.render(Map.of("phone", phone, "question", question)))))
                 .tools(userTools, timeTools)
-                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, phone + "-RR-" + chatId))
-                .stream().content();
+                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, chatId))
+                .stream().content()
+                ;
     }
 
     @Override
