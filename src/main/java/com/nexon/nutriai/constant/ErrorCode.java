@@ -12,6 +12,11 @@ public class ErrorCode {
      */
     public static final String UNKNOWN_ERROR = "UNKNOWN_ERROR";
 
+    /**
+     * 参数为空
+     */
+    public static final String NONE_PARAM_ERROR = "NONE_PARAM_ERROR";
+
     /*** 图片识别异常 ***/
 
     /**

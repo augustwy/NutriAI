@@ -2,9 +2,11 @@ package com.nexon.nutriai.controller;
 
 import com.nexon.nutriai.constant.ErrorCode;
 import com.nexon.nutriai.pojo.response.BaseResponse;
+import com.nexon.nutriai.pojo.response.FoodIdentificationRes;
 import com.nexon.nutriai.service.FoodRecognitionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,9 +19,27 @@ public class FoodRecognitionController {
 
     private final FoodRecognitionService foodRecognitionService;
 
+    /**
+     * 食物识别
+     *
+     * @param file
+     * @return
+     */
     @PostMapping("/recognize")
-    public BaseResponse<String> recognizeFood(@RequestParam("file") MultipartFile file) {
-        String result = foodRecognitionService.recognizeAndAnalyze(file);
+    public BaseResponse<FoodIdentificationRes> recognizeFood(@RequestParam("file") MultipartFile file) {
+        FoodIdentificationRes result = foodRecognitionService.recognize(file);
+        return new BaseResponse<>(result);
+    }
+
+    /**
+     * 营养报告
+     *
+     * @param res
+     * @return
+     */
+    @PostMapping("/nutritionReport")
+    public BaseResponse<String> nutritionReport(@RequestBody FoodIdentificationRes res) {
+        String result = foodRecognitionService.nutritionReport(res.foodIdentification(), res.id());
         BaseResponse<String> success = new BaseResponse<>(ErrorCode.SUCCESS);
         success.setData(result);
         return success;

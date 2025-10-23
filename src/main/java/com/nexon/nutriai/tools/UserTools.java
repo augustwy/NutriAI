@@ -1,4 +1,4 @@
-package com.nexon.nutriai.mcp;
+package com.nexon.nutriai.tools;
 
 import com.nexon.nutriai.pojo.dto.UserInformationDTO;
 import com.nexon.nutriai.service.UserService;
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class UserMCPService {
+public class UserTools {
 
     private final UserService userService;
 

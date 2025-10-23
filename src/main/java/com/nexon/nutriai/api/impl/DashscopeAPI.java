@@ -8,25 +8,27 @@ import com.nexon.nutriai.api.TextAPI;
 import com.nexon.nutriai.api.VisionAPI;
 import com.nexon.nutriai.config.properties.DashscopeModelProperties;
 import com.nexon.nutriai.constant.ErrorCode;
-import com.nexon.nutriai.constant.UserPromptConstant;
+import com.nexon.nutriai.constant.PromptConstant;
 import com.nexon.nutriai.exception.NutriaiException;
+import com.nexon.nutriai.tools.UserTools;
 import com.nexon.nutriai.pojo.FoodIdentification;
 import com.nexon.nutriai.repository.EatingLogRepository;
 import com.nexon.nutriai.repository.entity.EatingLog;
+import com.nexon.nutriai.util.DateUtils;
 import com.nexon.nutriai.util.ThreadLocalUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
+import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.prompt.Prompt;
-import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.content.Media;
-import org.springframework.ai.template.st.StTemplateRenderer;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.MimeTypeUtils;
 
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 
@@ -37,8 +39,9 @@ public class DashscopeAPI implements VisionAPI, TextAPI {
     private final ChatClient dashScopeChatClient;
     private final DashscopeModelProperties modelListProperties;
     private final EatingLogRepository eatingLogRepository;
+    private final UserTools userTools;
 
-    public DashscopeAPI(ChatModel chatModel, DashscopeModelProperties modelListProperties, EatingLogRepository eatingLogRepository) {
+    public DashscopeAPI(ChatModel chatModel, DashscopeModelProperties modelListProperties, EatingLogRepository eatingLogRepository, UserTools userTools) {
         // 构造时，可以设置 ChatClient 的参数
         // {@link org.springframework.ai.chat.client.ChatClient};
         this.dashScopeChatClient = ChatClient.builder(chatModel)
@@ -49,6 +52,7 @@ public class DashscopeAPI implements VisionAPI, TextAPI {
 
         this.modelListProperties = modelListProperties;
         this.eatingLogRepository = eatingLogRepository;
+        this.userTools = userTools;
     }
 
     /**
@@ -63,10 +67,12 @@ public class DashscopeAPI implements VisionAPI, TextAPI {
         String phone = ThreadLocalUtil.getPhone();
 
         List<Media> mediaList = List.of(new Media(MimeTypeUtils.IMAGE_JPEG, new FileSystemResource(filePath)));
-        UserMessage message = UserMessage.builder().media(mediaList).text(UserPromptConstant.IMAGE_IDENTIFY_USER_PROMPT).build();
-        message.getMetadata().put(DashScopeApiConstants.MESSAGE_FORMAT, MessageFormat.IMAGE);
+        UserMessage userMessage = UserMessage.builder().media(mediaList).text(PromptConstant.IMAGE_IDENTIFY_USER_PROMPT).build();
+        userMessage.getMetadata().put(DashScopeApiConstants.MESSAGE_FORMAT, MessageFormat.IMAGE);
 
-        Prompt chatPrompt = new Prompt(message, DashScopeChatOptions.builder().withModel(modelListProperties.getVision())  // 使用视觉模型
+        SystemMessage systemMessage = new SystemMessage(PromptConstant.IMAGE_IDENTIFY_SYSTEM_PROMPT);
+        Prompt chatPrompt = new Prompt(List.of(systemMessage, userMessage),
+                DashScopeChatOptions.builder().withModel(modelListProperties.getVision())  // 使用视觉模型
                 .withMultiModel(true)             // 启用多模态
                 .withVlHighResolutionImages(true) // 启用高分辨率图片处理
                 .withTemperature(0.7).build());
@@ -93,17 +99,20 @@ public class DashscopeAPI implements VisionAPI, TextAPI {
 
         // 获取模板参数
         Map<String, Object> templateParams = identification.toTemplateParameters();
+        templateParams.put("phone", ThreadLocalUtil.getPhone());
+        templateParams.put("time", DateUtils.format(LocalTime.now()));
         // 渲染模板
-        UserMessage message = UserMessage.builder()
-                .text(UserPromptConstant.NUTRITION_ANALYZE_REPORT_USER_PROMPT_TEMPLATE.render(templateParams))
+        UserMessage userMessage = UserMessage.builder()
+                .text(PromptConstant.NUTRITION_ANALYZE_REPORT_USER_PROMPT_TEMPLATE.render(templateParams))
                 .build();
+        SystemMessage systemMessage = new SystemMessage(PromptConstant.NUTRITION_ANALYZE_REPORT_SYSTEM_PROMPT);
 
-        Prompt chatPrompt = new Prompt(message, DashScopeChatOptions.builder()
+        Prompt chatPrompt = new Prompt(List.of(systemMessage, userMessage), DashScopeChatOptions.builder()
                 .withModel(modelListProperties.getText())
                 .build());
 
         log.debug("generateNutritionReport request: {}", chatPrompt);
-        String content = dashScopeChatClient.prompt(chatPrompt).call().content();
+        String content = dashScopeChatClient.prompt(chatPrompt).tools(userTools).call().content();
         log.info("generateNutritionReport response: {}", content);
         return content;
     }

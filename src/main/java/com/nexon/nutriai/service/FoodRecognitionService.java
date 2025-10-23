@@ -5,6 +5,7 @@ import com.nexon.nutriai.api.VisionAPI;
 import com.nexon.nutriai.constant.ErrorCode;
 import com.nexon.nutriai.exception.NutriaiException;
 import com.nexon.nutriai.pojo.FoodIdentification;
+import com.nexon.nutriai.pojo.response.FoodIdentificationRes;
 import com.nexon.nutriai.repository.DialogueLogRepository;
 import com.nexon.nutriai.repository.entity.DialogueLog;
 import com.nexon.nutriai.util.DateUtils;
@@ -20,6 +21,7 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -31,7 +33,7 @@ public class FoodRecognitionService {
     private final DialogueLogRepository dialogueLogRepository;
 
     @Transactional
-    public String recognizeAndAnalyze(MultipartFile image) {
+    public FoodIdentificationRes recognize(MultipartFile image) {
         String phone = ThreadLocalUtil.getPhone();
 
         String filePath = saveImage(image);
@@ -39,16 +41,28 @@ public class FoodRecognitionService {
         dialogueLog.setPhone(phone);
         dialogueLog.setRequestId(ThreadLocalUtil.getChatId());
         dialogueLog.setQuestion("file://" + filePath);
+        // 记录日志
+        DialogueLog save = dialogueLogRepository.save(dialogueLog);
 
         // 调用视觉API识别食物
         FoodIdentification identification = visionAPI.analyzeFoodImage(filePath);
+        return new FoodIdentificationRes(identification, save.getId());
+    }
 
+    @Transactional
+    public String nutritionReport(FoodIdentification identification, Long dialogueLogId) {
+        if (identification == null || dialogueLogId == null) {
+            throw new NutriaiException(ErrorCode.NONE_PARAM_ERROR, "对话记录不存在");
+        }
+        Optional<DialogueLog> optional = dialogueLogRepository.findById(dialogueLogId);
+        if (optional.isEmpty()) {
+            throw new NutriaiException(ErrorCode.NONE_PARAM_ERROR, "对话记录不存在");
+        }
+        DialogueLog dialogueLog = optional.get();
         // 调用文本API分析营养元素
         String analyzeNutrition = textAPI.generateNutritionReport(identification);
 
         dialogueLog.setAnswer(analyzeNutrition);
-
-        // 记录日志
         dialogueLogRepository.save(dialogueLog);
         return analyzeNutrition;
     }
@@ -59,7 +73,7 @@ public class FoodRecognitionService {
      * @param image 图片文件
      * @return 图片保存路径
      */
-    public String saveImage(MultipartFile image) {
+    private String saveImage(MultipartFile image) {
         try {
             // 获取项目根路径
             String projectRoot = System.getProperty("user.dir");

@@ -3,9 +3,9 @@ package com.nexon.nutriai.api.impl;
 import com.alibaba.cloud.ai.dashscope.chat.DashScopeChatOptions;
 import com.nexon.nutriai.api.ChatAPI;
 import com.nexon.nutriai.config.properties.DashscopeModelProperties;
-import com.nexon.nutriai.constant.SystemPromptConstant;
-import com.nexon.nutriai.constant.UserPromptConstant;
-import com.nexon.nutriai.mcp.UserMCPService;
+import com.nexon.nutriai.constant.PromptConstant;
+import com.nexon.nutriai.tools.TimeTools;
+import com.nexon.nutriai.tools.UserTools;
 import com.nexon.nutriai.repository.H2ChatMemoryRepository;
 import com.nexon.nutriai.util.ThreadLocalUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -30,10 +30,11 @@ public class DashscopeChatAPI implements ChatAPI {
 
     private final ChatClient dashScopeChatClient;
     private final ChatMemory messageWindowChatMemory;
-    private final UserMCPService userMCPService;
+    private final UserTools userTools;
+    private final TimeTools timeTools;
 
 
-    public DashscopeChatAPI(ChatModel chatModel, DashscopeModelProperties modelListProperties, H2ChatMemoryRepository chatMemoryRepository, UserMCPService userMCPService) {
+    public DashscopeChatAPI(ChatModel chatModel, DashscopeModelProperties modelListProperties, H2ChatMemoryRepository chatMemoryRepository, UserTools userTools, TimeTools timeTools) {
         // 构造 ChatMemoryRepository 和 ChatMemory
         this.messageWindowChatMemory = MessageWindowChatMemory.builder()
                 .chatMemoryRepository(chatMemoryRepository)
@@ -45,15 +46,16 @@ public class DashscopeChatAPI implements ChatAPI {
                 .defaultOptions(DashScopeChatOptions.builder().withTopP(0.7).withModel(modelListProperties.getChat()).build())
                 .build();
 
-        this.userMCPService = userMCPService;
+        this.userTools = userTools;
+        this.timeTools = timeTools;
     }
 
     @Override
     public Flux<String> recommendRecipe(String question, String chatId) {
         String phone = ThreadLocalUtil.getPhone();
-        return dashScopeChatClient.prompt(new Prompt(new SystemMessage(SystemPromptConstant.RECOMMEND_RECIPE_SYSTEM_PROMPT),
-                        new UserMessage(UserPromptConstant.RECOMMEND_RECIPE_USER_PROMPT_TEMPLATE.render(Map.of("phone", phone, "question", question)))))
-                .tools(userMCPService)
+        return dashScopeChatClient.prompt(new Prompt(new SystemMessage(PromptConstant.RECOMMEND_RECIPE_SYSTEM_PROMPT),
+                        new UserMessage(PromptConstant.RECOMMEND_RECIPE_USER_PROMPT_TEMPLATE.render(Map.of("phone", phone, "question", question)))))
+                .tools(userTools, timeTools)
                 .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, phone + "-RR-" + chatId))
                 .stream().content();
     }
