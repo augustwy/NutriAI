@@ -8,10 +8,13 @@ import com.nexon.nutriai.util.UUIDUtil;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
+
+import java.time.Duration;
 
 @RestController
 @RequestMapping("/web/recipe")
@@ -21,7 +24,6 @@ public class RecipeController {
     private final RecipeService recipeService;
 
     @PostMapping(value = "/recommend", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    @SseResponse
     public Flux<String> recommend(String question, HttpServletResponse response) {
         String phone = ThreadLocalUtil.getPhone();
         String chatId = ThreadLocalUtil.getChatId();
@@ -47,5 +49,13 @@ public class RecipeController {
         response.setHeader("Cache-Control", "no-cache");
         response.setHeader("Connection", "keep-alive");
         return recipeService.getChatHistoryStream(chatId);
+    }
+
+    @GetMapping("/stream")
+    public Flux<String> getStream() {
+        // 业务代码完全不需要修改
+        return Flux.interval(Duration.ofSeconds(1))
+                .map(i -> "Data " + i + " at " + System.currentTimeMillis())
+                .take(10);
     }
 }
