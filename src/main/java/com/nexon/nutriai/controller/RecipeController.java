@@ -1,6 +1,5 @@
 package com.nexon.nutriai.controller;
 
-import com.nexon.nutriai.config.annotation.SseResponse;
 import com.nexon.nutriai.pojo.ChatHistory;
 import com.nexon.nutriai.service.RecipeService;
 import com.nexon.nutriai.util.ThreadLocalUtil;
