@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.chat.memory.ChatMemoryRepository;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.SystemMessage;
@@ -30,14 +31,15 @@ public class DashscopeChatAPI implements ChatAPI {
 
     private final ChatClient dashScopeChatClient;
     private final ChatMemory messageWindowChatMemory;
+    private final ChatMemoryRepository chatMemoryRepository;
     private final UserTools userTools;
     private final TimeTools timeTools;
 
 
-    public DashscopeChatAPI(ChatModel chatModel, DashscopeModelProperties modelListProperties, H2ChatMemoryRepository chatMemoryRepository, UserTools userTools, TimeTools timeTools) {
+    public DashscopeChatAPI(ChatModel chatModel, DashscopeModelProperties modelListProperties, H2ChatMemoryRepository h2ChatMemoryRepository, ChatMemoryRepository chatMemoryRepository, UserTools userTools, TimeTools timeTools) {
         // 构造 ChatMemoryRepository 和 ChatMemory
         this.messageWindowChatMemory = MessageWindowChatMemory.builder()
-                .chatMemoryRepository(chatMemoryRepository)
+                .chatMemoryRepository(h2ChatMemoryRepository)
                 .maxMessages(100)
                 .build();
         this.dashScopeChatClient = ChatClient.builder(chatModel)
@@ -48,6 +50,7 @@ public class DashscopeChatAPI implements ChatAPI {
 
         this.userTools = userTools;
         this.timeTools = timeTools;
+        this.chatMemoryRepository = chatMemoryRepository;
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.nexon.nutriai.controller;
 
+import com.nexon.nutriai.pojo.ChatHistory;
 import com.nexon.nutriai.pojo.response.BaseResponse;
 import com.nexon.nutriai.service.RecipeService;
 import com.nexon.nutriai.util.ThreadLocalUtil;
@@ -34,8 +35,8 @@ public class RecipeController {
         return recipeService.recommendRecipe(question, chatId);
     }
 
-    @GetMapping("/messages")
-    public BaseResponse<List<Message>> messages(String chatId) {
-        return new BaseResponse<>(recipeService.messages(chatId));
+    @GetMapping("/getChatHistory")
+    public Flux<ChatHistory> getChatHistory(String chatId) {
+        return recipeService.getChatHistoryStream(chatId);
     }
 }

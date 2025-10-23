@@ -1,16 +1,23 @@
 package com.nexon.nutriai.service;
 
 import com.nexon.nutriai.api.ChatAPI;
+import com.nexon.nutriai.pojo.ChatHistory;
 import com.nexon.nutriai.repository.DialogueLogRepository;
 import com.nexon.nutriai.repository.entity.DialogueLog;
 import com.nexon.nutriai.util.ThreadLocalUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
+import org.springframework.ai.chat.messages.SystemMessage;
+import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 
 @Slf4j
 @Service
@@ -42,8 +49,25 @@ public class RecipeService {
                 });
     }
 
-    public List<Message> messages(String conversationId) {
-        return chatAPI.messages(conversationId);
+    public Flux<ChatHistory> getChatHistoryStream(String conversationId) {
+        return Flux.fromIterable(chatAPI.messages(conversationId))
+                .mapNotNull(message -> {
+                    if (message instanceof UserMessage userMessage) {
+                        String text = userMessage.getText();
+                        int start = text.indexOf("|----------|");
+                        int end = text.lastIndexOf("|----------|");
+                        if (start != -1 && end != -1) {
+                            String substring = text.substring(start + 12, end)
+                                    .replaceAll("\r", "")
+                                    .replaceAll("\n", "");
+                            return new ChatHistory("user", substring);
+                        }
+                    } else if (message instanceof AssistantMessage assistantMessage) {
+                        return new ChatHistory("assistant", assistantMessage.getText());
+                    }
+                    return null;
+                })
+                .filter(Objects::nonNull);
     }
 
     private void saveDialogueLog(String chatId, String phone, String question, String response) {
