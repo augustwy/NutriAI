@@ -4,9 +4,9 @@ import com.nexon.nutriai.constant.ErrorCode;
 
 public class BaseResponse<T> {
 
-    private String code;
+    private final String code;
 
-    private String message;
+    private final String message;
 
     private T data;
 

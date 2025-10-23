@@ -33,7 +33,7 @@ public class InMemoryCache<K, V> implements Cache<K, V> {
             return null;
         }
 
-        return entry.getValue();
+        return entry.value();
     }
 
     @Override
@@ -82,30 +82,17 @@ public class InMemoryCache<K, V> implements Cache<K, V> {
     }
 
     /**
-     * 缓存条目内部类
-     */
-    private static class CacheEntry<V> {
-        private final V value;
-        private final Long expireTime;
-
-        public CacheEntry(V value) {
-            this.value = value;
-            this.expireTime = null;
-        }
-
-        public CacheEntry(V value, Long expireTime) {
-            this.value = value;
-            this.expireTime = expireTime;
-        }
-
-        public V getValue() {
-            return value;
-        }
+         * 缓存条目内部类
+         */
+        private record CacheEntry<V>(V value, Long expireTime) {
+            public CacheEntry(V value) {
+                this(value, null);
+            }
 
         public boolean isExpired() {
-            return expireTime != null && System.currentTimeMillis() > expireTime;
+                return expireTime != null && System.currentTimeMillis() > expireTime;
+            }
         }
-    }
 
     /**
      * 关闭清理任务

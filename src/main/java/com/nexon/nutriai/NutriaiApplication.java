@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @SpringBootApplication
 @EnableJpaRepositories(basePackages = "com.nexon.nutriai.repository")
 public class NutriaiApplication {
-    static void main(String[] args) {
+    public static void main(String[] args) {
         SpringApplication.run(NutriaiApplication.class, args);
     }
 }
