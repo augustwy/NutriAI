@@ -9,7 +9,6 @@ import com.nexon.nutriai.pojo.response.FoodIdentificationRes;
 import com.nexon.nutriai.repository.DialogueLogRepository;
 import com.nexon.nutriai.repository.entity.DialogueLog;
 import com.nexon.nutriai.util.DateUtils;
-import com.nexon.nutriai.util.ThreadLocalUtil;
 import com.nexon.nutriai.util.UUIDUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,24 +32,23 @@ public class FoodRecognitionService {
     private final DialogueLogRepository dialogueLogRepository;
 
     @Transactional
-    public FoodIdentificationRes recognize(MultipartFile image) {
-        String phone = ThreadLocalUtil.getPhone();
+    public FoodIdentificationRes recognize(MultipartFile image, String phone, String chatId) {
 
         String filePath = saveImage(image);
         DialogueLog dialogueLog = new DialogueLog();
         dialogueLog.setPhone(phone);
-        dialogueLog.setRequestId(ThreadLocalUtil.getChatId());
+        dialogueLog.setRequestId(chatId);
         dialogueLog.setQuestion("file://" + filePath);
         // 记录日志
         DialogueLog save = dialogueLogRepository.save(dialogueLog);
 
         // 调用视觉API识别食物
-        FoodIdentification identification = visionAPI.analyzeFoodImage(filePath);
+        FoodIdentification identification = visionAPI.analyzeFoodImage(filePath, phone);
         return new FoodIdentificationRes(identification, save.getId());
     }
 
     @Transactional
-    public String nutritionReport(FoodIdentification identification, Long dialogueLogId) {
+    public String nutritionReport(FoodIdentification identification, Long dialogueLogId, String phone) {
         if (identification == null || dialogueLogId == null) {
             throw new NutriaiException(ErrorCode.NONE_PARAM_ERROR, "对话记录不存在");
         }
@@ -60,7 +58,7 @@ public class FoodRecognitionService {
         }
         DialogueLog dialogueLog = optional.get();
         // 调用文本API分析营养元素
-        String analyzeNutrition = textAPI.generateNutritionReport(identification);
+        String analyzeNutrition = textAPI.generateNutritionReport(identification, phone);
 
         dialogueLog.setAnswer(analyzeNutrition);
         dialogueLogRepository.save(dialogueLog);

@@ -3,12 +3,14 @@ package com.nexon.nutriai.pojo.dto;
 import com.nexon.nutriai.repository.entity.UserHealthGoal;
 import lombok.Getter;
 import lombok.Setter;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Date;
 
 @Getter
 @Setter
 public class UserHealthGoalDTO {
+    @NotNull
     private String phone;
 
     private double weight;

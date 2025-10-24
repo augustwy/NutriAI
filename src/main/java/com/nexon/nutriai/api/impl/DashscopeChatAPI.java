@@ -7,7 +7,6 @@ import com.nexon.nutriai.constant.PromptConstant;
 import com.nexon.nutriai.tools.TimeTools;
 import com.nexon.nutriai.tools.UserTools;
 import com.nexon.nutriai.repository.H2ChatMemoryRepository;
-import com.nexon.nutriai.util.ThreadLocalUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
@@ -61,8 +60,7 @@ public class DashscopeChatAPI implements ChatAPI {
     }
 
     @Override
-    public Flux<String> recommendRecipe(String question, String chatId) {
-        String phone = ThreadLocalUtil.getPhone();
+    public Flux<String> recommendRecipe(String phone, String question, String chatId) {
         return dashScopeChatClient.prompt(new Prompt(new SystemMessage(PromptConstant.RECOMMEND_RECIPE_SYSTEM_PROMPT),
                         new UserMessage(PromptConstant.RECOMMEND_RECIPE_USER_PROMPT_TEMPLATE.render(Map.of("phone", phone, "question", question)))))
                 .tools(userTools, timeTools)

@@ -10,11 +10,10 @@ import com.nexon.nutriai.repository.entity.UserHealthGoal;
 import com.nexon.nutriai.repository.entity.UserProfile;
 import com.nexon.nutriai.service.UserService;
 import com.nexon.nutriai.util.JwtUtil;
-import com.nexon.nutriai.util.ThreadLocalUtil;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseCookie;
+import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -46,7 +45,7 @@ public class UserController {
      * 用户登录接口
      */
     @PostMapping("/signIn")
-    public BaseResponse<UserInfo> signIn(@RequestParam String phone, @RequestParam String password, HttpServletResponse response) {
+    public BaseResponse<UserInfo> signIn(@RequestParam String phone, @RequestParam String password, ServerHttpResponse response) {
 
         AppUser user = userService.signIn(phone, password);
         if (user == null) {
@@ -66,7 +65,7 @@ public class UserController {
      * 刷新 Token 接口
      */
     @PostMapping("/refresh")
-    public BaseResponse<?> refresh(@CookieValue(value = "refreshToken", required = false) String refreshToken, HttpServletResponse response) {
+    public BaseResponse<?> refresh(@CookieValue(value = "refreshToken", required = false) String refreshToken, ServerHttpResponse response) {
 
         // 1. 验证 Refresh Token 是否有效
         if (refreshToken != null && jwtUtil.validateToken(refreshToken) && jwtUtil.isRefreshToken(refreshToken)) {
@@ -97,9 +96,6 @@ public class UserController {
      */
     @PostMapping("/updateUserProfile")
     public BaseResponse<?> updateUserProfile(@RequestBody UserProfileDTO userProfileDTO) {
-        String phone = ThreadLocalUtil.getPhone();
-
-        userProfileDTO.setPhone(phone);
         userService.updateUserProfile(userProfileDTO);
         return new BaseResponse<>(ErrorCode.SUCCESS, "更新成功");
     }
@@ -111,9 +107,6 @@ public class UserController {
      */
     @PostMapping("/updateUserHealthGoal")
     public BaseResponse<?> updateUserHealthGoal(@RequestBody UserHealthGoalDTO userHealthGoalDTO) {
-        String phone = ThreadLocalUtil.getPhone();
-
-        userHealthGoalDTO.setPhone(phone);
         userService.updateUserHealthGoal(userHealthGoalDTO);
         return new BaseResponse<>(ErrorCode.SUCCESS, "更新成功");
     }
@@ -140,8 +133,8 @@ public class UserController {
         return new BaseResponse<>(userHealthGoal);
     }
 
-    private void setToken(HttpServletResponse response, Map<String, String> tokens) {
-        response.setHeader("Authorization", "Bearer " + tokens.get("accessToken"));
+    private void setToken(ServerHttpResponse response, Map<String, String> tokens) {
+        response.getHeaders().add("Authorization", "Bearer " + tokens.get("accessToken"));
 
         // 创建 HttpOnly Cookie
         ResponseCookie cookie = ResponseCookie.from("refreshToken", tokens.get("refreshToken"))
@@ -152,6 +145,6 @@ public class UserController {
                 .sameSite("Lax")
                 .build();
 
-        response.addHeader("Set-Cookie", cookie.toString());
+        response.getHeaders().add("Set-Cookie", cookie.toString());
     }
 }

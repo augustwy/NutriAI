@@ -15,7 +15,6 @@ import com.nexon.nutriai.pojo.FoodIdentification;
 import com.nexon.nutriai.repository.EatingLogRepository;
 import com.nexon.nutriai.repository.entity.EatingLog;
 import com.nexon.nutriai.util.DateUtils;
-import com.nexon.nutriai.util.ThreadLocalUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
@@ -62,9 +61,8 @@ public class DashscopeAPI implements VisionAPI, TextAPI {
      * @return 食物识别结果
      */
     @Override
-    public FoodIdentification analyzeFoodImage(String filePath) {
+    public FoodIdentification analyzeFoodImage(String filePath, String phone) {
         log.info("identifyFood request: {}", filePath);
-        String phone = ThreadLocalUtil.getPhone();
 
         List<Media> mediaList = List.of(new Media(MimeTypeUtils.IMAGE_JPEG, new FileSystemResource(filePath)));
         UserMessage userMessage = UserMessage.builder().media(mediaList).text(PromptConstant.IMAGE_IDENTIFY_USER_PROMPT).build();
@@ -91,7 +89,7 @@ public class DashscopeAPI implements VisionAPI, TextAPI {
     }
 
     @Override
-    public String generateNutritionReport(FoodIdentification identification) {
+    public String generateNutritionReport(FoodIdentification identification, String phone) {
         log.info("generateNutritionReport request: {}", identification);
         if (identification == null || identification.getFoods() == null || identification.getFoods().isEmpty()) {
             throw new NutriaiException(ErrorCode.IMAGE_RECOGNITION_ERROR, "无法识别图片中的食物");
@@ -99,7 +97,7 @@ public class DashscopeAPI implements VisionAPI, TextAPI {
 
         // 获取模板参数
         Map<String, Object> templateParams = identification.toTemplateParameters();
-        templateParams.put("phone", ThreadLocalUtil.getPhone());
+        templateParams.put("phone", phone);
         templateParams.put("time", DateUtils.format(LocalTime.now()));
         // 渲染模板
         UserMessage userMessage = UserMessage.builder()

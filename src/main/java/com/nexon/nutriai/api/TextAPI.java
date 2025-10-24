@@ -11,5 +11,5 @@ public interface TextAPI {
      * @param identification
      * @return
      */
-    String generateNutritionReport(FoodIdentification identification);
+    String generateNutritionReport(FoodIdentification identification, String phone);
 }

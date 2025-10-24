@@ -28,7 +28,7 @@ public class RecipeService {
     public Flux<String> recommendRecipe(String phone, String question, String chatId) {
 
         // 获取流式响应
-        Flux<String> responseStream = chatAPI.recommendRecipe(question, chatId);
+        Flux<String> responseStream = chatAPI.recommendRecipe(phone, question, chatId);
 
         // 收集完整响应并保存
         StringBuilder completeResponse = new StringBuilder();

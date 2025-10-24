@@ -15,7 +15,7 @@ public interface ChatAPI {
      * @param chatId
      * @return
      */
-    Flux<String> recommendRecipe(String question, String chatId);
+    Flux<String> recommendRecipe(String phone, String question, String chatId);
 
     /**
      * 记忆获取

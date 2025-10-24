@@ -12,5 +12,5 @@ public interface VisionAPI {
      * @param filePath
      * @return
      */
-    FoodIdentification analyzeFoodImage(String filePath);
+    FoodIdentification analyzeFoodImage(String filePath, String phone);
 }

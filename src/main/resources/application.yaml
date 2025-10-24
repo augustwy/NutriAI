@@ -1,13 +1,11 @@
 server:
   port: 8080
-  servlet:
-    context-path: /nutri-ai
 
 spring:
-  servlet:
-    multipart:
-      max-file-size: 20MB
-      max-request-size: 40MB
+  main:
+    web-application-type: reactive
+  webflux:
+    base-path: /nutri-ai
   ai:
     chat:
       client:

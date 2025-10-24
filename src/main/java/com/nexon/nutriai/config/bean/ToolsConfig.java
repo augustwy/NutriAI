@@ -1,6 +1,6 @@
 package com.nexon.nutriai.config.bean;
 
-import com.alibaba.cloud.ai.toolcalling.time.GetCurrentTimeByTimeZoneIdService;
+import com.alibaba.cloud.ai.toolcalling.time.GetTimeByZoneIdService;
 import com.nexon.nutriai.tools.TimeTools;
 import com.nexon.nutriai.tools.UserTools;
 import org.springframework.ai.tool.ToolCallbackProvider;
@@ -22,12 +22,12 @@ public class ToolsConfig {
     }
 
     @Bean
-    public GetCurrentTimeByTimeZoneIdService getGetCurrentTimeByTimeZoneIdService() {
-        return new GetCurrentTimeByTimeZoneIdService();
+    public GetTimeByZoneIdService getTimeByZoneIdService() {
+        return new GetTimeByZoneIdService();
     }
 
     @Bean
-    public TimeTools timeTools(GetCurrentTimeByTimeZoneIdService service) {
-        return new TimeTools(service);
+    public TimeTools timeTools(GetTimeByZoneIdService getTimeByZoneIdService) {
+        return new TimeTools(getTimeByZoneIdService);
     }
 }
