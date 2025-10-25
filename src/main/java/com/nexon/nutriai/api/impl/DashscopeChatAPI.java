@@ -80,7 +80,9 @@ public class DashscopeChatAPI implements ChatAPI {
         return Flux.defer(() -> {
             String subscriptionId = chatId + "_" + System.currentTimeMillis();
             return flux.doOnSubscribe(subscription -> {
-                activeSubscriptions.put(subscriptionId, (Disposable) subscription);
+                // 创建Disposable包装器来适配Subscription
+                Disposable disposable = subscription::cancel;
+                activeSubscriptions.put(subscriptionId, disposable);
             }).doFinally(signalType -> {
                 activeSubscriptions.remove(subscriptionId);
             });

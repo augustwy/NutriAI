@@ -68,14 +68,7 @@ public class HeaderWebFilter implements WebFilter {
         }
 
         // 5. 【核心改造】从 JWT 中解析用户信息，而不是从请求头
-        return Mono.fromCallable(() -> {
-                    // 阻塞调用，验证 Token 并获取 Subject (phone)
-                    if (!jwtUtil.validateToken(token) || jwtUtil.isRefreshToken(token)) {
-                        throw new IllegalArgumentException("Invalid or refresh token");
-                    }
-                    return jwtUtil.getSubjectFromToken(token);
-                })
-                .subscribeOn(Schedulers.boundedElastic())
+        return validateJwtToken(token)
                 .flatMap(phone -> {
                     // 将从 JWT 中解析出的 phone 放入上下文
                     exchange.getAttributes().put(WebFluxUtil.CURRENT_USER_ATTR, phone);
@@ -86,13 +79,18 @@ public class HeaderWebFilter implements WebFilter {
                         exchange.getAttributes().put(WebFluxUtil.CHAT_ID_ATTR, chatId);
                     }
                     return chain.filter(exchange);
-                })
-                .onErrorResume(ex -> {
-                    log.error("JWT validation failed: {}", ex.getMessage());
-                    // 不直接写入响应，而是返回错误状态让全局异常处理器处理
-                    exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-                    return Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized"));
                 });
+    }
+
+    private Mono<String> validateJwtToken(String token) {
+        return Mono.fromCallable(() -> {
+                    if (!jwtUtil.validateToken(token) || jwtUtil.isRefreshToken(token)) {
+                        throw new IllegalArgumentException("Invalid or refresh token");
+                    }
+                    return jwtUtil.getSubjectFromToken(token);
+                })
+                .subscribeOn(Schedulers.boundedElastic())
+                .onErrorMap(ex -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized", ex));
     }
 
     private Mono<Void> handleUnauthorized(ServerHttpResponse response, String message) {
