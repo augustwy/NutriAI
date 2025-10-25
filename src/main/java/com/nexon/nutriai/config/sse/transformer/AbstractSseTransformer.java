@@ -29,9 +29,11 @@ public abstract class AbstractSseTransformer implements SseTransformer {
         return isTargetFormatMono.flatMapMany(isTarget -> {
             if (isTarget) {
                 // 如果已经是目标格式，直接透传缓存的原始流
+                // cachedFlux 中的所有 DataBuffer（包括第一个）都将被下游消费并正确释放
                 return cachedFlux;
             } else {
                 // 如果不是目标格式，则执行转换逻辑
+                // doTransform 将消费 cachedFlux，并负责释放其中的 DataBuffer
                 return doTransform(cachedFlux, context);
             }
         });
@@ -59,18 +61,21 @@ public abstract class AbstractSseTransformer implements SseTransformer {
 
     // --- 通用辅助方法 ---
 
+    /**
+     * 【关键修改】将 DataBuffer 的内容转换为字符串，但不释放 DataBuffer。
+     * 这允许 DataBuffer 被 cache() 操作符重放，并由最终的消费者负责释放。
+     * @param buffer 要读取的 DataBuffer
+     * @return 字符串内容
+     */
     protected String dataBufferToString(DataBuffer buffer) {
-        try {
-            if (buffer.readableByteCount() > 0) {
-                byte[] bytes = new byte[buffer.readableByteCount()];
-                buffer.read(bytes);
-                return new String(bytes, StandardCharsets.UTF_8);
-            }
-            return "";
-        } finally {
-            // 确保 buffer 被释放
-            DataBufferUtils.release(buffer);
-        }
+        // 为了不消费 buffer，我们读取它的内容，然后重置读位置
+        byte[] bytes = new byte[buffer.readableByteCount()];
+        // 保存原始读位置
+        int originalReadPosition = buffer.readPosition();
+        buffer.read(bytes);
+        // 将读位置重置，以便后续消费者可以再次读取
+        buffer.readPosition(originalReadPosition);
+        return new String(bytes, StandardCharsets.UTF_8);
     }
 
     protected String sanitizeSsePayload(String rawPayload) {

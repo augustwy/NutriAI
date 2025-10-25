@@ -16,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
@@ -72,7 +73,7 @@ public class HeaderWebFilter implements WebFilter {
                     if (!jwtUtil.validateToken(token) || jwtUtil.isRefreshToken(token)) {
                         throw new IllegalArgumentException("Invalid or refresh token");
                     }
-                    return jwtUtil.getSubjectFromToken(token); // 返回 phone
+                    return jwtUtil.getSubjectFromToken(token);
                 })
                 .subscribeOn(Schedulers.boundedElastic())
                 .flatMap(phone -> {
@@ -84,12 +85,13 @@ public class HeaderWebFilter implements WebFilter {
                     if (StringUtils.isNotEmpty(chatId)) {
                         exchange.getAttributes().put(WebFluxUtil.CHAT_ID_ATTR, chatId);
                     }
-
-                    return chain.filter(exchange); // 验证通过，继续执行
+                    return chain.filter(exchange);
                 })
                 .onErrorResume(ex -> {
                     log.error("JWT validation failed: {}", ex.getMessage());
-                    return handleUnauthorized(response, "Unauthorized");
+                    // 不直接写入响应，而是返回错误状态让全局异常处理器处理
+                    exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+                    return Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized"));
                 });
     }
 
