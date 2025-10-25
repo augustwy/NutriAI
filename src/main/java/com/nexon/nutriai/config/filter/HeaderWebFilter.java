@@ -48,14 +48,17 @@ public class HeaderWebFilter implements WebFilter {
             return chain.filter(exchange);
         }
 
-        // 2. 从请求头获取信息
-        String phone = request.getHeaders().getFirst(HttpHeaderConstant.REQUEST_HEADER_USER_PHONE);
+        // 2. 从请求中获取 Token
         String token = getTokenFromRequest(request);
-
 
         // 3. 根据环境决定是否进行鉴权
         if ("DEV".equals(env)) {
-            return doFilter(exchange, chain);
+            // DEV 模式下，可以从请求头模拟一个用户
+            String mockPhone = request.getHeaders().getFirst(HttpHeaderConstant.REQUEST_HEADER_USER_PHONE);
+            if (StringUtils.isNotEmpty(mockPhone)) {
+                exchange.getAttributes().put(WebFluxUtil.CURRENT_USER_ATTR, mockPhone);
+            }
+            return chain.filter(exchange);
         }
 
         // 4. JWT 验证逻辑
@@ -63,51 +66,37 @@ public class HeaderWebFilter implements WebFilter {
             return handleUnauthorized(response, "no token");
         }
 
-        // 5. 将阻塞的 JWT 验证调用包装在弹性线程池中执行
+        // 5. 【核心改造】从 JWT 中解析用户信息，而不是从请求头
         return Mono.fromCallable(() -> {
-                    // 这里是阻塞调用
-                    boolean isValid = jwtUtil.validateToken(token) && !jwtUtil.isRefreshToken(token);
-                    if (!isValid) {
-                        throw new IllegalArgumentException("Invalid token");
+                    // 阻塞调用，验证 Token 并获取 Subject (phone)
+                    if (!jwtUtil.validateToken(token) || jwtUtil.isRefreshToken(token)) {
+                        throw new IllegalArgumentException("Invalid or refresh token");
                     }
-                    // 验证通过，获取用户信息
-                    String tokenPhone = jwtUtil.getSubjectFromToken(token);
-                    if (phone == null || !phone.equals(tokenPhone)) {
-                        throw new IllegalArgumentException("Token phone mismatch");
-                    }
-                    return true; // 验证成功
+                    return jwtUtil.getSubjectFromToken(token); // 返回 phone
                 })
-                .subscribeOn(Schedulers.boundedElastic()) // 在弹性线程池中执行
-                .flatMap(_ -> doFilter(exchange, chain)) // 验证通过，继续执行后续过滤器
-                .onErrorResume(ex -> { // 捕获验证过程中的任何异常
-                    log.error("JWT validation failed: {}", ex.getMessage(), ex);
+                .subscribeOn(Schedulers.boundedElastic())
+                .flatMap(phone -> {
+                    // 将从 JWT 中解析出的 phone 放入上下文
+                    exchange.getAttributes().put(WebFluxUtil.CURRENT_USER_ATTR, phone);
+
+                    // chatId 仍然可以从请求头获取，因为它不是用户身份标识
+                    String chatId = request.getHeaders().getFirst(HttpHeaderConstant.REQUEST_HEADER_CHAT_ID);
+                    if (StringUtils.isNotEmpty(chatId)) {
+                        exchange.getAttributes().put(WebFluxUtil.CHAT_ID_ATTR, chatId);
+                    }
+
+                    return chain.filter(exchange); // 验证通过，继续执行
+                })
+                .onErrorResume(ex -> {
+                    log.error("JWT validation failed: {}", ex.getMessage());
                     return handleUnauthorized(response, "Unauthorized");
                 });
-    }
-
-    private Mono<Void> doFilter(ServerWebExchange exchange, WebFilterChain chain) {
-        ServerHttpRequest request = exchange.getRequest();
-        String phone = request.getHeaders().getFirst(HttpHeaderConstant.REQUEST_HEADER_USER_PHONE);
-        String chatId = request.getHeaders().getFirst(HttpHeaderConstant.REQUEST_HEADER_CHAT_ID);
-
-        // 使用 mutate() 方法将属性添加到 exchange 中
-        ServerWebExchange mutatedExchange = exchange.mutate()
-                .build();
-
-        if (StringUtils.isNotEmpty(phone)) {
-            mutatedExchange.getAttributes().put(WebFluxUtil.CURRENT_USER_ATTR, phone);
-        }
-        if (StringUtils.isNotEmpty(chatId)) {
-            mutatedExchange.getAttributes().put(WebFluxUtil.CHAT_ID_ATTR, chatId);
-        }
-
-        return chain.filter(mutatedExchange);
     }
 
     private Mono<Void> handleUnauthorized(ServerHttpResponse response, String message) {
         response.setStatusCode(HttpStatus.UNAUTHORIZED);
         response.getHeaders().set(HttpHeaders.CONTENT_TYPE, "application/json; charset=UTF-8");
-        String body = String.format("{\"code\":401,\"message\":\"%s\"}", message);
+        String body = String.format("{\"code\":%d,\"message\":\"%s\"}", HttpStatus.UNAUTHORIZED.value(), message);
         DataBuffer buffer = response.bufferFactory().wrap(body.getBytes(StandardCharsets.UTF_8));
         return response.writeWith(Mono.just(buffer));
     }
@@ -118,10 +107,11 @@ public class HeaderWebFilter implements WebFilter {
     }
 
     private boolean matchesPath(String pattern, String requestURI) {
+        String uri = extractPathAfterSecondSlash(requestURI);
         if (pattern.endsWith("/**")) {
-            return requestURI.startsWith(pattern.substring(0, pattern.length() - 3));
+            return uri.startsWith(pattern.substring(0, pattern.length() - 3));
         }
-        return pattern.equals(requestURI);
+        return pattern.equals(uri);
     }
 
     private String getTokenFromRequest(ServerHttpRequest request) {
@@ -132,5 +122,26 @@ public class HeaderWebFilter implements WebFilter {
 
         // 这里获取的是 刷新token
         return request.getQueryParams().getFirst("token");
+    }
+
+    private String extractPathAfterSecondSlash(String requestURI) {
+        if (requestURI == null || requestURI.isEmpty()) {
+            return requestURI;
+        }
+
+        // 找到第一个斜杠的位置
+        int firstSlashIndex = requestURI.indexOf('/');
+        if (firstSlashIndex == -1) {
+            return requestURI;
+        }
+
+        // 找到第二个斜杠的位置
+        int secondSlashIndex = requestURI.indexOf('/', firstSlashIndex + 1);
+        if (secondSlashIndex == -1) {
+            return ""; // 没有第二个斜杠，返回空字符串
+        }
+
+        // 返回第二个斜杠后的内容
+        return requestURI.substring(secondSlashIndex + 1);
     }
 }

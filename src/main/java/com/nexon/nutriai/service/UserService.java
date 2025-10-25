@@ -84,6 +84,18 @@ public class UserService {
         return appUser;
     }
 
+    public AppUser signInWithOpenId(String phone, String openId) {
+        Optional<AppUser> optional = userRepository.findById(phone);
+        if (optional.isEmpty()) {
+            return null;
+        }
+        AppUser appUser = optional.get();
+        // 用户登录后缓存用户信息
+        getUserInformation(phone);
+        log.info("signIn success: {}", appUser.getPhone());
+        return appUser;
+    }
+
     /**
      * 更新用户基础信息
      *
@@ -189,6 +201,13 @@ public class UserService {
         return userInformationDTO;
     }
 
+    public AppUser findByOpenId(String openId) {
+        if (openId == null) {
+            return null;
+        }
+        return userRepository.findByOpenId(openId);
+    }
+
     /**
      * 更新用户信息缓存
      *
@@ -246,5 +265,16 @@ public class UserService {
         height = height / 100;
         double bmi = weight / (height * height);
         return Math.round(bmi * 100.0) / 100.0;
+    }
+
+    public boolean updateOpenId(String phone, String openId) {
+        Optional<AppUser> optional = userRepository.findById(phone);
+        if (optional.isEmpty()) {
+            return false;
+        }
+        AppUser appUser = optional.get();
+        appUser.setOpenId(openId);
+        userRepository.save(appUser);
+        return true;
     }
 }

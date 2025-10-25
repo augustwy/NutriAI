@@ -20,4 +20,7 @@ public class AppUser {
 
     @Column(length = 60)
     private String password;
+
+    @Column(name = "open_id")
+    private String openId;
 }

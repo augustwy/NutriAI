@@ -42,5 +42,7 @@ public class ErrorCode {
      */
     public static final String SIGN_IN_ERROR = "SIGN_IN_ERROR";
 
+    public static final String USER_NOT_FIND_ERROR = "USER_NOT_FIND_ERROR";
+
     public static final String TOKEN_REFRESH_ERROR = "TOKEN_REFRESH_ERROR";
 }
