@@ -1,0 +1,91 @@
+package com.nexon.nutriai.config.sse.transformer;
+
+import com.nexon.nutriai.config.sse.SseContext;
+import com.nexon.nutriai.config.sse.SseTransformer;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.core.io.buffer.DataBufferUtils;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+import java.nio.charset.StandardCharsets;
+
+/**
+ * 抽象 SSE 转换器，提供通用的辅助方法和“短路”优化逻辑。
+ */
+public abstract class AbstractSseTransformer implements SseTransformer {
+
+    @Override
+    public Flux<DataBuffer> transform(Flux<DataBuffer> originalFlux, SseContext context) {
+        // 【核心优化】缓存原始流，允许我们多次订阅（一次用于判断，一次用于处理）
+        Flux<DataBuffer> cachedFlux = originalFlux.cache();
+
+        // 窥视第一个 DataBuffer 来判断格式
+        Mono<Boolean> isTargetFormatMono = cachedFlux.next()
+                .map(firstBuffer -> isAlreadyTargetFormat(dataBufferToString(firstBuffer), context))
+                .defaultIfEmpty(false); // 如果流为空，则不是目标格式
+
+        // 根据判断结果，选择不同的处理路径
+        return isTargetFormatMono.flatMapMany(isTarget -> {
+            if (isTarget) {
+                // 如果已经是目标格式，直接透传缓存的原始流
+                return cachedFlux;
+            } else {
+                // 如果不是目标格式，则执行转换逻辑
+                return doTransform(cachedFlux, context);
+            }
+        });
+    }
+
+    /**
+     * 由子类实现：判断给定的第一个事件字符串是否已经是目标格式。
+     * @param firstEvent 第一个 SSE 事件的字符串形式
+     * @param context    转换上下文
+     * @return true 如果是目标格式，否则 false
+     */
+    protected abstract boolean isAlreadyTargetFormat(String firstEvent, SseContext context);
+
+    /**
+     * 执行具体的转换逻辑。
+     * 默认不处理，直接返回原始数据流。
+     * @param originalFlux 原始数据流
+     * @param context      转换上下文
+     * @return 转换后的数据流
+     */
+    protected Flux<DataBuffer> doTransform(Flux<DataBuffer> originalFlux, SseContext context) {
+        return originalFlux;
+    }
+
+
+    // --- 通用辅助方法 ---
+
+    protected String dataBufferToString(DataBuffer buffer) {
+        try {
+            if (buffer.readableByteCount() > 0) {
+                byte[] bytes = new byte[buffer.readableByteCount()];
+                buffer.read(bytes);
+                return new String(bytes, StandardCharsets.UTF_8);
+            }
+            return "";
+        } finally {
+            // 确保 buffer 被释放
+            DataBufferUtils.release(buffer);
+        }
+    }
+
+    protected String sanitizeSsePayload(String rawPayload) {
+        if (StringUtils.isEmpty(rawPayload)) {
+            return "";
+        }
+        String content = rawPayload.trim();
+        if (content.endsWith("\n\n")) {
+            content = content.substring(0, content.length() - 2);
+        }
+        content = "\n" + content;
+        content = content.replaceAll("\ndata:", "\n");
+        if (content.startsWith("\n")) {
+            content = content.substring(1);
+        }
+        return content;
+    }
+}

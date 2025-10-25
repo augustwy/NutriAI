@@ -1,7 +1,9 @@
 package com.nexon.nutriai.config.filter;
 
 import com.nexon.nutriai.config.properties.JwtProperties;
+import com.nexon.nutriai.constant.HttpHeaderConstant;
 import com.nexon.nutriai.util.JwtUtil;
+import com.nexon.nutriai.util.WebFluxUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -47,7 +49,7 @@ public class HeaderWebFilter implements WebFilter {
         }
 
         // 2. 从请求头获取信息
-        String phone = request.getHeaders().getFirst("phone");
+        String phone = request.getHeaders().getFirst(HttpHeaderConstant.REQUEST_HEADER_USER_PHONE);
         String token = getTokenFromRequest(request);
 
 
@@ -76,27 +78,30 @@ public class HeaderWebFilter implements WebFilter {
                     return true; // 验证成功
                 })
                 .subscribeOn(Schedulers.boundedElastic()) // 在弹性线程池中执行
-                .flatMap(_ -> chain.filter(exchange)) // 验证通过，继续执行后续过滤器
+                .flatMap(_ -> doFilter(exchange, chain)) // 验证通过，继续执行后续过滤器
                 .onErrorResume(ex -> { // 捕获验证过程中的任何异常
-                    log.error("JWT validation failed: {}", ex.getMessage());
+                    log.error("JWT validation failed: {}", ex.getMessage(), ex);
                     return handleUnauthorized(response, "Unauthorized");
                 });
     }
 
     private Mono<Void> doFilter(ServerWebExchange exchange, WebFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
-        String phone = request.getHeaders().getFirst("phone");
-        String chatId = request.getHeaders().getFirst("chatId");
+        String phone = request.getHeaders().getFirst(HttpHeaderConstant.REQUEST_HEADER_USER_PHONE);
+        String chatId = request.getHeaders().getFirst(HttpHeaderConstant.REQUEST_HEADER_CHAT_ID);
 
-        return chain.filter(exchange).contextWrite(ctx -> {
-            if (StringUtils.isNotEmpty(phone)) {
-                ctx.put("currentUser", phone);
-            }
-            if (StringUtils.isNotEmpty(chatId)) {
-                ctx.put("chatId", chatId);
-            }
-            return ctx;
-        });
+        // 使用 mutate() 方法将属性添加到 exchange 中
+        ServerWebExchange mutatedExchange = exchange.mutate()
+                .build();
+
+        if (StringUtils.isNotEmpty(phone)) {
+            mutatedExchange.getAttributes().put(WebFluxUtil.CURRENT_USER_ATTR, phone);
+        }
+        if (StringUtils.isNotEmpty(chatId)) {
+            mutatedExchange.getAttributes().put(WebFluxUtil.CHAT_ID_ATTR, chatId);
+        }
+
+        return chain.filter(mutatedExchange);
     }
 
     private Mono<Void> handleUnauthorized(ServerHttpResponse response, String message) {

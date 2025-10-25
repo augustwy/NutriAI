@@ -6,6 +6,7 @@ import com.nexon.nutriai.pojo.response.FoodIdentificationRes;
 import com.nexon.nutriai.service.FoodRecognitionService;
 import com.nexon.nutriai.util.WebFluxUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,7 +28,7 @@ public class FoodRecognitionController extends BaseController {
      * @param file
      * @return
      */
-    @PostMapping("/recognize")
+    @GetMapping("/recognize")
     public BaseResponse<FoodIdentificationRes> recognizeFood(@RequestParam("file") MultipartFile file, ServerWebExchange exchange) {
         String chatId = WebFluxUtil.getChatId(exchange);
         String phone = WebFluxUtil.getPhone(exchange);
@@ -41,7 +42,7 @@ public class FoodRecognitionController extends BaseController {
      * @param res
      * @return
      */
-    @PostMapping("/nutritionReport")
+    @GetMapping("/nutritionReport")
     public BaseResponse<String> nutritionReport(@RequestBody FoodIdentificationRes res, ServerWebExchange exchange) {
         String phone = WebFluxUtil.getPhone(exchange);
         String result = foodRecognitionService.nutritionReport(res.foodIdentification(), res.id(), phone);

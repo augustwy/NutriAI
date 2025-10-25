@@ -4,8 +4,8 @@ import org.springframework.web.server.ServerWebExchange;
 
 public class WebFluxUtil {
 
-    private static final String CURRENT_USER_ATTR = "currentUser";
-    private static final String CHAT_ID_ATTR = "chatId";
+    public static final String CURRENT_USER_ATTR = "currentUser";
+    public static final String CHAT_ID_ATTR = "chatId";
 
     public static String getPhone(ServerWebExchange exchange) {
 
