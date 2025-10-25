@@ -67,6 +67,10 @@ public class RecipeService {
                 .filter(Objects::nonNull);
     }
 
+    public boolean interruptRequest(String chatId) {
+        return chatAPI.interruptRequest(chatId);
+    }
+
     private void saveDialogueLog(String chatId, String phone, String question, String response) {
         DialogueLog dialogueLog = new DialogueLog();
         dialogueLog.setRequestId(chatId);

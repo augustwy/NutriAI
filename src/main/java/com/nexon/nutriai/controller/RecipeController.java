@@ -2,6 +2,7 @@ package com.nexon.nutriai.controller;
 
 import com.nexon.nutriai.constant.HttpHeaderConstant;
 import com.nexon.nutriai.pojo.ChatHistory;
+import com.nexon.nutriai.pojo.response.BaseResponse;
 import com.nexon.nutriai.service.RecipeService;
 import com.nexon.nutriai.util.UUIDUtil;
 import com.nexon.nutriai.util.WebFluxUtil;
@@ -49,5 +50,15 @@ public class RecipeController extends BaseController {
         return Flux.interval(Duration.ofSeconds(1))
                 .map(i -> "Data " + i + " at " + System.currentTimeMillis())
                 .take(10);
+    }
+
+    /**
+     * 中断请求
+     * @param chatId
+     * @return
+     */
+    @PostMapping("interrupt")
+    public BaseResponse<Boolean> post(String chatId) {
+        return new BaseResponse<>(recipeService.interruptRequest(chatId));
     }
 }

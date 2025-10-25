@@ -23,4 +23,11 @@ public interface ChatAPI {
      * @return
      */
     List<Message> messages(String conversationId);
+
+    /**
+     * 中断请求
+     * @param chatId
+     * @return
+     */
+    boolean interruptRequest(String chatId);
 }

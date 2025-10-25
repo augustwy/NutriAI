@@ -19,10 +19,12 @@ import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.stereotype.Component;
+import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 @Slf4j
@@ -35,6 +37,9 @@ public class DashscopeChatAPI implements ChatAPI {
     private final TimeTools timeTools;
 
     private String model;
+
+    // 添加中断控制Map
+    private final Map<String, Disposable> activeSubscriptions = new ConcurrentHashMap<>();
 
     public DashscopeChatAPI(ChatModel chatModel, DashscopeModelProperties modelListProperties, H2ChatMemoryRepository h2ChatMemoryRepository, ChatMemoryRepository chatMemoryRepository, UserTools userTools, TimeTools timeTools) {
         this.model = modelListProperties.getChat();
@@ -61,16 +66,54 @@ public class DashscopeChatAPI implements ChatAPI {
 
     @Override
     public Flux<String> recommendRecipe(String phone, String question, String chatId) {
-        return dashScopeChatClient.prompt(new Prompt(new SystemMessage(PromptConstant.RECOMMEND_RECIPE_SYSTEM_PROMPT),
-                        new UserMessage(PromptConstant.RECOMMEND_RECIPE_USER_PROMPT_TEMPLATE.render(Map.of("phone", phone, "question", question)))))
+        Flux<String> flux = dashScopeChatClient.prompt(new Prompt(
+                        new SystemMessage(PromptConstant.RECOMMEND_RECIPE_SYSTEM_PROMPT),
+                        new UserMessage(PromptConstant.RECOMMEND_RECIPE_USER_PROMPT_TEMPLATE.render(
+                                Map.of("phone", phone, "question", question))
+                        )))
                 .tools(userTools, timeTools)
                 .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, chatId))
-                .stream().content()
-                ;
+                .stream()
+                .content();
+
+        // 包装Flux以跟踪订阅状态
+        return Flux.defer(() -> {
+            String subscriptionId = chatId + "_" + System.currentTimeMillis();
+            return flux.doOnSubscribe(subscription -> {
+                activeSubscriptions.put(subscriptionId, (Disposable) subscription);
+            }).doFinally(signalType -> {
+                activeSubscriptions.remove(subscriptionId);
+            });
+        });
     }
 
     @Override
     public List<Message> messages(String conversationId) {
         return messageWindowChatMemory.get(conversationId);
+    }
+
+    /**
+     * 中断指定聊天ID的正在进行的请求
+     * @param chatId 聊天ID
+     * @return 是否成功中断
+     */
+    @Override
+    public boolean interruptRequest(String chatId) {
+        return activeSubscriptions.entrySet().stream()
+                .filter(entry -> entry.getKey().startsWith(chatId))
+                .map(entry -> {
+                    entry.getValue().dispose();
+                    return true;
+                })
+                .findFirst()
+                .orElse(false);
+    }
+
+    /**
+     * 中断所有正在进行的请求
+     */
+    public void interruptAllRequests() {
+        activeSubscriptions.values().forEach(Disposable::dispose);
+        activeSubscriptions.clear();
     }
 }
