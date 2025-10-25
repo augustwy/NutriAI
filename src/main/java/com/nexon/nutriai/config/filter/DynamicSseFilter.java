@@ -37,6 +37,12 @@ public class DynamicSseFilter implements WebFilter {
             return chain.filter(exchange);
         }
 
+        // 如果没有就走默认的处理器
+        SseTransformer transformer = transformerFactory.getTransformer(responseFormat);
+        if (transformer == null) {
+            return chain.filter(exchange);
+        }
+
         String chatId = determineAndSetChatId(exchange);
         String model = exchange.getResponse().getHeaders().getFirst(HttpHeaderConstant.RESPONSE_HEADER_MODEL);
 
@@ -44,27 +50,45 @@ public class DynamicSseFilter implements WebFilter {
         SseContext context = new SseContext(chatId, model, exchange.getResponse().bufferFactory(), new ObjectMapper());
 
         // 从工厂获取转换器
-        SseTransformer transformer = transformerFactory.getTransformer(responseFormat);
 
-        ServerHttpResponse response = exchange.getResponse();
-        response.getHeaders().setContentType(MediaType.TEXT_EVENT_STREAM);
-        response.getHeaders().set(HttpHeaders.CACHE_CONTROL, "no-cache");
-        response.getHeaders().set(HttpHeaders.CONNECTION, "keep-alive");
 
-        ServerHttpResponseDecorator decoratedResponse = new ServerHttpResponseDecorator(response) {
+        ServerHttpResponse originalResponse = exchange.getResponse();
+
+        // 【核心修改】在这里不再直接设置SSE响应头，而是延迟到确认是Flux响应时再设置
+        ServerHttpResponseDecorator decoratedResponse = new ServerHttpResponseDecorator(originalResponse) {
+
+            // 使用一个标志来确保SSE头信息只被设置一次，防止重复操作
+            private volatile boolean sseHeadersSet = false;
+
+            /**
+             * 私有方法：用于按需设置SSE头信息
+             */
+            private void setSseHeadersIfNeeded() {
+                if (!sseHeadersSet) {
+                    getDelegate().getHeaders().setContentType(MediaType.TEXT_EVENT_STREAM);
+                    getDelegate().getHeaders().set(HttpHeaders.CACHE_CONTROL, "no-cache");
+                    getDelegate().getHeaders().set(HttpHeaders.CONNECTION, "keep-alive");
+                    sseHeadersSet = true;
+                }
+            }
+
             @Override
             public Mono<Void> writeWith(Publisher<? extends DataBuffer> body) {
-                if (!(body instanceof Flux)) {
+                if (body instanceof Flux) {
+                    // 【关键】只有当body是Flux时，才设置SSE头并进行转换
+                    setSseHeadersIfNeeded();
+                    return super.writeWith(transformer.transform((Flux<DataBuffer>) body, context));
+                } else {
+                    // 如果是普通的Mono响应，则直接传递，不做任何处理
                     return super.writeWith(body);
                 }
-                // 委托给转换器处理
-                return super.writeWith(transformer.transform((Flux<DataBuffer>) body, context));
             }
 
             @Override
             public Mono<Void> writeAndFlushWith(Publisher<? extends Publisher<? extends DataBuffer>> body) {
+                // writeAndFlushWith 本身就是为流式设计的，我们将其展平后按Flux处理
                 Flux<DataBuffer> flattenedFlux = Flux.from(body).flatMap(p -> p);
-                // 同样委托给转换器处理
+                setSseHeadersIfNeeded();
                 return super.writeWith(transformer.transform(flattenedFlux, context));
             }
         };
