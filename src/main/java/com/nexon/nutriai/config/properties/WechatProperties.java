@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 @Getter
 @Setter
 @Component
-@ConfigurationProperties(prefix = "oauth2.wechat.open")
+@ConfigurationProperties(prefix = "app.oauth2.wechat")
 public class WechatProperties {
     private String appId;
     private String appSecret;

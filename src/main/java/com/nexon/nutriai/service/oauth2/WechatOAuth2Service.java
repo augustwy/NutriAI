@@ -3,11 +3,13 @@ package com.nexon.nutriai.service.oauth2;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nexon.nutriai.config.properties.WechatProperties;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
-@Service("wechatOAuth2Service") // 使用自定义 Bean 名称，便于区分
+@Service("wechatOAuth2Service")
+@ConditionalOnProperty(name = "app.oauth2.wechat.enabled", havingValue = "false")
 public class WechatOAuth2Service implements OAuth2Service {
 
     private final WebClient webClient;
