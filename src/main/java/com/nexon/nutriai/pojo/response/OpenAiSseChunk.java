@@ -1,4 +1,4 @@
-package com.nexon.nutriai.pojo.response;
+package com.nexon.nutriai.domain.service.response;
 
 import lombok.Getter;
 import lombok.Setter;

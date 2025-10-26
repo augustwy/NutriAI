@@ -1,20 +1,14 @@
-package com.nexon.nutriai.api.impl;
+package com.nexon.nutriai.output.ai;
 
 import com.alibaba.cloud.ai.dashscope.chat.DashScopeChatOptions;
 import com.alibaba.cloud.ai.dashscope.chat.MessageFormat;
 import com.alibaba.cloud.ai.dashscope.common.DashScopeApiConstants;
 import com.alibaba.fastjson2.JSONObject;
-import com.nexon.nutriai.api.TextAPI;
-import com.nexon.nutriai.api.VisionAPI;
-import com.nexon.nutriai.config.properties.DashscopeModelProperties;
 import com.nexon.nutriai.constant.ErrorCode;
 import com.nexon.nutriai.constant.PromptConstant;
 import com.nexon.nutriai.exception.NutriaiException;
-import com.nexon.nutriai.tools.UserTools;
-import com.nexon.nutriai.pojo.FoodIdentification;
-import com.nexon.nutriai.repository.EatingLogRepository;
-import com.nexon.nutriai.repository.entity.EatingLog;
-import com.nexon.nutriai.util.DateUtils;
+import com.nexon.nutriai.ports.output.ai.TextAPI;
+import com.nexon.nutriai.ports.output.ai.VisionAPI;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
@@ -95,13 +89,17 @@ public class DashscopeAPI implements VisionAPI, TextAPI {
             throw new NutriaiException(ErrorCode.IMAGE_RECOGNITION_ERROR, "无法识别图片中的食物");
         }
 
+        PromptTemplate NUTRITION_ANALYZE_REPORT_USER_PROMPT_TEMPLATE = PromptTemplate.builder()
+                .template(PromptConstant.NUTRITION_ANALYZE_REPORT_USER_PROMPT)
+                .build();
+
         // 获取模板参数
         Map<String, Object> templateParams = identification.toTemplateParameters();
         templateParams.put("phone", phone);
         templateParams.put("time", DateUtils.format(LocalTime.now()));
         // 渲染模板
         UserMessage userMessage = UserMessage.builder()
-                .text(PromptConstant.NUTRITION_ANALYZE_REPORT_USER_PROMPT_TEMPLATE.render(templateParams))
+                .text(NUTRITION_ANALYZE_REPORT_USER_PROMPT_TEMPLATE.render(templateParams))
                 .build();
         SystemMessage systemMessage = new SystemMessage(PromptConstant.NUTRITION_ANALYZE_REPORT_SYSTEM_PROMPT);
 

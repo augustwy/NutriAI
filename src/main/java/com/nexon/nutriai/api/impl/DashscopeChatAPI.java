@@ -1,4 +1,4 @@
-package com.nexon.nutriai.api.impl;
+package com.nexon.nutriai.output.ai;
 
 import com.alibaba.cloud.ai.dashscope.chat.DashScopeChatOptions;
 import com.nexon.nutriai.api.ChatAPI;
@@ -66,9 +66,13 @@ public class DashscopeChatAPI implements ChatAPI {
 
     @Override
     public Flux<String> recommendRecipe(String phone, String question, String chatId) {
+        PromptTemplate RECOMMEND_RECIPE_USER_PROMPT_TEMPLATE = PromptTemplate.builder()
+                .template(PromptConstant.RECOMMEND_RECIPE_USER_PROMPT)
+                .build();
+
         Flux<String> flux = dashScopeChatClient.prompt(new Prompt(
                         new SystemMessage(PromptConstant.RECOMMEND_RECIPE_SYSTEM_PROMPT),
-                        new UserMessage(PromptConstant.RECOMMEND_RECIPE_USER_PROMPT_TEMPLATE.render(
+                        new UserMessage(RECOMMEND_RECIPE_USER_PROMPT_TEMPLATE.render(
                                 Map.of("phone", phone, "question", question))
                         )))
                 .tools(userTools, timeTools)
