@@ -1,5 +1,6 @@
 server:
   port: 8080
+  address: 0.0.0.0
 
 spring:
   main:
@@ -45,7 +46,7 @@ logging:
     org.hibernate.type.descriptor.sql.BasicBinder: trace
 
 app:
-  env: PROD
+  env: DEV
   model-list:
     dashscope:
       vision: qwen3-vl-plus
@@ -57,3 +58,13 @@ app:
       - /web/user/signUp
       - /web/user/signIn
       - /web/user/callback/**
+  cors:
+    allowed-origins:
+      - "*"
+    allowed-methods:
+      - "GET"
+      - "POST"
+    allowed-headers:
+      - "*"
+    allow-credentials: false
+    max-age: 3600

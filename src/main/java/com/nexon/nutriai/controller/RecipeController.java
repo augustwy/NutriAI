@@ -7,6 +7,7 @@ import com.nexon.nutriai.service.RecipeService;
 import com.nexon.nutriai.util.UUIDUtil;
 import com.nexon.nutriai.util.WebFluxUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,6 +18,7 @@ import reactor.core.publisher.Flux;
 
 import java.time.Duration;
 
+@Slf4j
 @RestController
 @RequestMapping("/web/recipe")
 @RequiredArgsConstructor
@@ -47,9 +49,15 @@ public class RecipeController extends BaseController {
 
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<String> getStream() {
+        log.info("getStream");
         return Flux.interval(Duration.ofSeconds(1))
                 .map(i -> "Data " + i + " at " + System.currentTimeMillis())
                 .take(10);
+    }
+
+    @GetMapping(value = "/test")
+    public BaseResponse test() {
+        return BaseResponse.success();
     }
 
     /**
