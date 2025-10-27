@@ -29,7 +29,7 @@ public class BaseResponse<T> {
         this.data = data;
     }
 
-    public static BaseResponse<Object> success() {
+    public static BaseResponse<Void> success() {
         return new BaseResponse<>(ErrorCode.SUCCESS);
     }
 

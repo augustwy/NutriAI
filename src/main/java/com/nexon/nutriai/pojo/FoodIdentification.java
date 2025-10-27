@@ -13,7 +13,6 @@ import java.util.Map;
 @Setter
 public class FoodIdentification {
     private List<Food> foods;
-    private List<Ingredient> ingredients;
 
     @Getter
     @Setter
@@ -22,32 +21,19 @@ public class FoodIdentification {
         private String cookingMethod;
         private double weight;
 
-        @NotNull
-        public String toString() {
-            return name + ":" + weight + "g";
-        }
+        private List<Ingredient> ingredients;
     }
 
     @Getter
     @Setter
     public static class Ingredient {
         private String name;
-        private String food;
         private String proportion;
-
-        @NotNull
-        public String toString() {
-            return name + "在" + food + "中占" + proportion + "%";
-        }
-    }
-
-    @NotNull
-    public String toString() {
-        return "食物=" + foods + ", 食材=" + ingredients;
     }
 
     public Map<String, Object> toTemplateParameters() {
         StringBuilder foodList = new StringBuilder();
+        StringBuilder ingredientDetails = new StringBuilder();
         if (this.getFoods() != null && !this.getFoods().isEmpty()) {
             for (Food food : this.getFoods()) {
                 foodList.append("- ")
@@ -57,19 +43,18 @@ public class FoodIdentification {
                         .append("克 (烹饪方式: ")
                         .append(food.getCookingMethod())
                         .append(")\n");
-            }
-        }
 
-        StringBuilder ingredientDetails = new StringBuilder();
-        if (this.getIngredients() != null && !this.getIngredients().isEmpty()) {
-            for (Ingredient ingredient : this.getIngredients()) {
-                ingredientDetails.append("- ")
-                        .append(ingredient.getName())
-                        .append(": 属于")
-                        .append(ingredient.getFood())
-                        .append(" (占比")
-                        .append(ingredient.getProportion())
-                        .append(")\n");
+                if (food.getIngredients() != null && !food.getIngredients().isEmpty()) {
+                    for (Ingredient ingredient : food.getIngredients()) {
+                        ingredientDetails.append("- ")
+                                .append(ingredient.getName())
+                                .append(": 属于")
+                                .append(food.getName())
+                                .append(" (占比")
+                                .append(ingredient.getProportion())
+                                .append(")\n");
+                    }
+                }
             }
         }
 

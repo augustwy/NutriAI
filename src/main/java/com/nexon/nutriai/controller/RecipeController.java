@@ -2,6 +2,7 @@ package com.nexon.nutriai.controller;
 
 import com.nexon.nutriai.constant.HttpHeaderConstant;
 import com.nexon.nutriai.pojo.ChatHistory;
+import com.nexon.nutriai.pojo.request.BaseRequest;
 import com.nexon.nutriai.pojo.response.BaseResponse;
 import com.nexon.nutriai.service.RecipeService;
 import com.nexon.nutriai.util.UUIDUtil;
@@ -12,6 +13,8 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
@@ -27,7 +30,7 @@ public class RecipeController extends BaseController {
     private final RecipeService recipeService;
 
     @GetMapping(value = "/recommend", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<String> recommend(String question, ServerWebExchange exchange) {
+    public Flux<String> recommend(@RequestParam String question, ServerWebExchange exchange) {
         String phone = WebFluxUtil.getPhone(exchange);
         String chatId = WebFluxUtil.getChatId(exchange);
         if (chatId == null) {
@@ -38,11 +41,14 @@ public class RecipeController extends BaseController {
 
         exchange.getResponse().getHeaders().set(HttpHeaderConstant.RESPONSE_HEADER_MODEL, recipeService.getChatModel());
 
-        return recipeService.recommendRecipe(phone, question, chatId);
+        BaseRequest request = new BaseRequest();
+        request.setPhone(phone);
+        request.setChatId(chatId);
+        return recipeService.recommendRecipe(request, question);
     }
 
     @GetMapping(value = "/getChatHistory", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<ChatHistory> getChatHistory(String chatId) {
+    public Flux<ChatHistory> getChatHistory(@RequestParam String chatId) {
 
         return recipeService.getChatHistoryStream(chatId);
     }
@@ -56,7 +62,7 @@ public class RecipeController extends BaseController {
     }
 
     @GetMapping(value = "/test")
-    public BaseResponse test() {
+    public BaseResponse<Void> test() {
         return BaseResponse.success();
     }
 
@@ -66,7 +72,7 @@ public class RecipeController extends BaseController {
      * @return
      */
     @PostMapping("interrupt")
-    public BaseResponse<Boolean> post(String chatId) {
-        return new BaseResponse<>(recipeService.interruptRequest(chatId));
+    public BaseResponse<Boolean> interrupt(@RequestPart String chatId) {
+        return new BaseResponse<>(true);
     }
 }

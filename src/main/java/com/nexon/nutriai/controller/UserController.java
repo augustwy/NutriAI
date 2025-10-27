@@ -46,9 +46,9 @@ public class UserController {
      */
     @PostMapping("/signUp")
     public BaseResponse<Object> register(
-            @RequestParam String phone,
-            @RequestParam String name,
-            @RequestParam String password) {
+            @RequestPart String phone,
+            @RequestPart String name,
+            @RequestPart String password) {
 
         userService.signUp(phone, name, password);
 
@@ -59,7 +59,7 @@ public class UserController {
      * 用户登录接口
      */
     @PostMapping("/signIn")
-    public BaseResponse<UserInfo> signIn(@RequestParam String phone, @RequestParam String password, ServerHttpResponse response) {
+    public BaseResponse<UserInfo> signIn(@RequestPart String phone, @RequestPart String password, ServerHttpResponse response) {
 
         AppUser user = userService.signIn(phone, password);
         if (user == null) {
@@ -97,7 +97,7 @@ public class UserController {
      * 用户登出接口
      */
     @PostMapping("/logout")
-    public BaseResponse<?> logout(@RequestParam String phone) {
+    public BaseResponse<?> logout(@RequestPart String phone) {
         log.info("logout: {}", phone);
 
         return new BaseResponse<>(ErrorCode.SUCCESS, "退出成功");
@@ -232,9 +232,9 @@ public class UserController {
      */
     @PostMapping("/bindPhone")
     public BaseResponse<?> bindPhone(
-            @RequestParam String phone,
-            @RequestParam String verificationCode,
-            @RequestParam String state, String openId) {
+            @RequestPart String phone,
+            @RequestPart String verificationCode,
+            @RequestPart String state, String openId) {
 
         // 1. 校验验证码
         // if (!smsService.checkCode(phone, verificationCode)) { ... }

@@ -1,9 +1,16 @@
 package com.nexon.nutriai.service;
 
-import com.nexon.nutriai.api.ChatAPI;
+import com.nexon.nutriai.ai.ChatAPI;
+import com.nexon.nutriai.ai.common.AiTool;
+import com.nexon.nutriai.ai.common.AiToolUtil;
+import com.nexon.nutriai.constant.PromptConstant;
+import com.nexon.nutriai.constant.annotaion.LogAnnotation;
+import com.nexon.nutriai.constant.annotaion.TrackSubscription;
 import com.nexon.nutriai.pojo.ChatHistory;
-import com.nexon.nutriai.repository.DialogueLogRepository;
-import com.nexon.nutriai.repository.entity.DialogueLog;
+import com.nexon.nutriai.pojo.request.BaseAiRequest;
+import com.nexon.nutriai.pojo.request.BaseRequest;
+import com.nexon.nutriai.tools.TimeTools;
+import com.nexon.nutriai.tools.UserTools;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.messages.AssistantMessage;
@@ -11,6 +18,8 @@ import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @Slf4j
@@ -19,64 +28,44 @@ import java.util.Objects;
 public class RecipeService {
 
     private final ChatAPI chatAPI;
-    private final DialogueLogRepository dialogueLogRepository;
+    private final UserTools userTools;
+    private final TimeTools timeTools;
 
     public String getChatModel() {
         return chatAPI.getModel();
     }
 
-    public Flux<String> recommendRecipe(String phone, String question, String chatId) {
+    @TrackSubscription(value = "recommend", streamIdParamName = "chatId")
+    @LogAnnotation
+    public Flux<String> recommendRecipe(BaseRequest request, String question) {
+        BaseAiRequest baseAiRequest = new BaseAiRequest(request);
+        baseAiRequest.setSystemPrompt(PromptConstant.RECOMMEND_RECIPE_SYSTEM_PROMPT);
+        baseAiRequest.setContent(PromptConstant.RECOMMEND_RECIPE_USER_PROMPT);
+        baseAiRequest.setContext(Map.of("phone", request.getPhone(), "question", question));
 
+        AiTool userAiTool = AiToolUtil.build(userTools, "用户服务工具类", "userTools");
+        AiTool timeAiTool = AiToolUtil.build(timeTools, "时间工具类", "timeTools");
         // 获取流式响应
-        Flux<String> responseStream = chatAPI.recommendRecipe(phone, question, chatId);
 
-        // 收集完整响应并保存
-        StringBuilder completeResponse = new StringBuilder();
-
-        return responseStream
-                .doOnNext(completeResponse::append)
-                .doOnComplete(() -> {
-                    log.info("完整响应: {}", completeResponse);
-                    // 保存完整对话记录
-                    saveDialogueLog(chatId, phone, question, completeResponse.toString());
-                })
-                .doOnError(error -> {
-                    // 保存错误记录
-                    saveDialogueLog(chatId, phone, question, "Error: " + error.getMessage());
-                });
+        return chatAPI.chat(baseAiRequest, List.of(userAiTool, timeAiTool));
     }
 
-    public Flux<ChatHistory> getChatHistoryStream(String conversationId) {
-        return Flux.fromIterable(chatAPI.messages(conversationId))
-                .mapNotNull(message -> {
-                    if (message instanceof UserMessage userMessage) {
-                        String text = userMessage.getText();
-                        int start = text.indexOf("|----------|");
-                        int end = text.lastIndexOf("|----------|");
-                        if (start != -1 && end != -1) {
-                            String substring = text.substring(start + 12, end)
-                                    .replaceAll("\r", "")
-                                    .replaceAll("\n", "");
-                            return new ChatHistory("user", substring);
-                        }
-                    } else if (message instanceof AssistantMessage assistantMessage) {
-                        return new ChatHistory("assistant", assistantMessage.getText());
-                    }
-                    return null;
-                })
-                .filter(Objects::nonNull);
-    }
-
-    public boolean interruptRequest(String chatId) {
-        return chatAPI.interruptRequest(chatId);
-    }
-
-    private void saveDialogueLog(String chatId, String phone, String question, String response) {
-        DialogueLog dialogueLog = new DialogueLog();
-        dialogueLog.setRequestId(chatId);
-        dialogueLog.setPhone(phone);
-        dialogueLog.setQuestion(question);
-        dialogueLog.setAnswer(response);
-        dialogueLogRepository.save(dialogueLog);
+    public Flux<ChatHistory> getChatHistoryStream(String chatId) {
+        return chatAPI.history(chatId, (message -> {
+            if (message instanceof UserMessage userMessage) {
+                String text = userMessage.getText();
+                int start = text.indexOf("|----------|");
+                int end = text.lastIndexOf("|----------|");
+                if (start != -1 && end != -1) {
+                    String substring = text.substring(start + 12, end)
+                            .replaceAll("\r", "")
+                            .replaceAll("\n", "");
+                    return new ChatHistory("user", substring);
+                }
+            } else if (message instanceof AssistantMessage assistantMessage) {
+                return new ChatHistory("assistant", assistantMessage.getText());
+            }
+            return null;
+        }));
     }
 }

@@ -39,6 +39,9 @@ spring:
       settings:
         web-allow-others: true
       path: /h2-console
+  threads:
+    virtual:
+      enabled: true
 
 logging:
   level:
@@ -47,11 +50,12 @@ logging:
 
 app:
   env: DEV
-  model-list:
-    dashscope:
-      vision: qwen3-vl-plus
-      text: qwen-flash
-      chat: qwen-flash
+  models:
+    providers:
+      dashscope:
+        vision: qwen3-vl-plus
+        text: qwen-flash
+        chat: qwen-flash
   jwt:
     secret: 0iAKwlb7ZP4OG5qlRYCIGdrfKwNRJ6K5QhRZJqVhxf8=
     excludePaths:

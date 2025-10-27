@@ -1,7 +1,5 @@
 package com.nexon.nutriai.constant;
 
-import org.springframework.ai.chat.prompt.PromptTemplate;
-
 public class PromptConstant {
 
     /**
@@ -29,38 +27,46 @@ public class PromptConstant {
             5. 如果图片中存在硬币，尺子等参照物，可以对比食物大小
             6. 如果一个食材在两份食物中出现，则分别列举
             7. 如果图片中没有包含任何食物，就返回空字符串
-            8. 只返回有效的JSON格式，不包含任何其他文本：
+            8. 只返回有效的JSON格式，不包含任何其他文本，严格按照以下格式输出：
+            
             {
-                "foods": [
+              "foods": [
+                {
+                  "name": "食物1",
+                  "cookingMethod": "炒",
+                  "weight": 100.00,
+                  "ingredients": [
                     {
-                        name: "食物1",
-                        cookingMethod: "炒",
-                        weight: 100.00
+                      "name": "食材1",
+                      "proportion": 50
                     },
                     {
-                        name: "食物2",
-                        cookingMethod: "凉拌",
-                        weight: 100.00
+                      "name": "食材2",
+                      "proportion": 50
                     }
-                ],
-                "ingredients": [
+                  ]
+                },
+                {
+                  "name": "食物2",
+                  "cookingMethod": "凉拌",
+                  "weight": 100.00,
+                  "ingredients": [
                     {
-                        name: "食材1",
-                        food: "食物1",
-                        proportion: 100
-                    },
-                    {
-                        name: "食材2",
-                        food: "食物2",
-                        proportion: 50
-                    },
-                    {
-                        name: "食材3",
-                        food: "食物2",
-                        proportion: 10
+                      "name": "食材1",
+                      "proportion": 100
                     }
-                ]
+                  ]
+                }
+              ]
             }
+            
+            重要提示：
+            - 输出必须是严格的JSON格式
+            - 所有字段名必须使用双引号包围
+            - 字符串值必须使用双引号包围
+            - 数字值不需要引号
+            - 不要添加任何额外的说明文字
+            - 不要使用任何Markdown格式
             """;
 
     /**
@@ -77,7 +83,8 @@ public class PromptConstant {
     /**
      * 营养分析报告用户提示
      */
-    private static final String NUTRITION_ANALYZE_REPORT_USER_PROMPT = """
+
+    public static final String NUTRITION_ANALYZE_REPORT_USER_PROMPT = """
             请为用户(手机号: {phone})在{time}的饮食生成营养分析报告。
             
             ## 输入数据
@@ -92,6 +99,15 @@ public class PromptConstant {
             5. 提供整体饮食的营养评估（仅基于提供的食物）
             6. 根据营养分析给出针对这些食物的具体饮食建议
             7. 指出这些食物在营养过剩或不足的方面
+            8. 采用流式输出方式，逐步生成报告内容
+            
+            ## 流式输出指导原则
+            - 按照报告结构顺序逐步输出内容
+            - 先输出标题和食物详情表格
+            - 然后输出总体分析部分
+            - 最后输出饮食建议和免责声明
+            - 每个部分完成后立即输出，不要等待整个报告完成
+            - 确保每个输出的数据块都是有效的Markdown格式片段
             
             ## 输出结构
             # 营养分析报告
@@ -99,8 +115,8 @@ public class PromptConstant {
             ## 食物详情
             | 食物名称 | 重量(克) | 热量(千卡) | 蛋白质(克) | 脂肪(克) | 碳水化合物(克) | 营养分析 |
             |---------|---------|-----------|-----------|---------|---------------|---------|
-            | {食物名称1} | {重量1} | {热量1} | {蛋白质1} | {脂肪1} | {碳水化合物1} | {该食物的营养分析} |
-            | {食物名称2} | {重量2} | {热量2} | {蛋白质2} | {脂肪2} | {碳水化合物2} | {该食物的营养分析} |
+            | <食物名称1> | <重量1> | <热量1> | <蛋白质1> | <脂肪1> | <碳水化合物1> | <该食物的营养分析> |
+            | <食物名称2> | <重量2> | <热量2> | <蛋白质2> | <脂肪2> | <碳水化合物2> | <该食物的营养分析> |
             
             ## 总体分析
             - **总热量**: <千卡>
@@ -118,16 +134,6 @@ public class PromptConstant {
             
             > _本建议由AI生成，食物制作过程存在差异，结果仅供参考。_
             """;
-
-    /**
-     * 营养分析报告模板
-     *
-     * @param food_list
-     * @param ingredient_details
-     */
-    public static final PromptTemplate NUTRITION_ANALYZE_REPORT_USER_PROMPT_TEMPLATE = PromptTemplate.builder()
-            .template(NUTRITION_ANALYZE_REPORT_USER_PROMPT)
-            .build();
 
     /**
      * 菜谱推荐系统提示
@@ -189,20 +195,10 @@ public class PromptConstant {
     /**
      * 菜谱推荐用户提示
      */
-    private static final String RECOMMEND_RECIPE_USER_PROMPT = """
+    public static final String RECOMMEND_RECIPE_USER_PROMPT = """
             用户手机号：{phone}，以下是用户的提问，请你根据用户的提问做出回答：
             |----------|
             {question}
             |----------|
             """;
-
-    /**
-     * 菜谱推荐模板
-     *
-     * @param phone
-     * @param question
-     */
-    public static final PromptTemplate RECOMMEND_RECIPE_USER_PROMPT_TEMPLATE = PromptTemplate.builder()
-            .template(RECOMMEND_RECIPE_USER_PROMPT)
-            .build();
 }
