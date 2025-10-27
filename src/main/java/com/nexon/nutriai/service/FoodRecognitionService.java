@@ -26,6 +26,12 @@ import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 食物识别服务类
+ * 
+ * 该服务负责处理食物图片识别和营养分析功能。
+ * 它集成了视觉识别API和文本分析API，提供完整的食物识别和营养分析服务。
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -36,6 +42,16 @@ public class FoodRecognitionService {
     private final EatingLogRepository eatingLogRepository;
     private final UserTools userTools;
 
+    /**
+     * 识别食物图片并保存识别记录
+     * 
+     * 该方法使用视觉API分析上传的食物图片，识别其中的食物及其相关信息。
+     * 识别结果会被保存到饮食日志中。
+     * 
+     * @param filePath 图片文件路径
+     * @param request 基础请求对象，包含用户信息
+     * @return 食物识别结果
+     */
     @Transactional
     @LogAnnotation(value = "recognize", requestType = LogAnnotation.RequestType.NORMAL)
     public FoodIdentificationRes recognize(String filePath, BaseRequest request) {
@@ -56,6 +72,16 @@ public class FoodRecognitionService {
         return new FoodIdentificationRes(identification);
     }
 
+    /**
+     * 生成营养分析报告
+     * 
+     * 该方法基于食物识别结果，调用文本API生成详细的营养分析报告。
+     * 报告以流式方式返回，支持实时显示。
+     * 
+     * @param identification 食物识别结果
+     * @param request 基础请求对象，包含用户信息
+     * @return 流式的营养分析报告内容
+     */
     @TrackSubscription(value = "nutritionReport", streamIdParamName = "chatId")
     @LogAnnotation(value = "recognize", requestType = LogAnnotation.RequestType.NORMAL)
     public Flux<String> nutritionReport(FoodIdentification identification, BaseRequest request) {
@@ -76,6 +102,11 @@ public class FoodRecognitionService {
         return textAPI.textAnalysis4Stream(baseAiRequest, List.of(userAiTool));
     }
 
+    /**
+     * 获取文本模型名称
+     * 
+     * @return 当前使用的文本模型名称
+     */
     public String getTextModel() {
         return textAPI.getModel();
     }

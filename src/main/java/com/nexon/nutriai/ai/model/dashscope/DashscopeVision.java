@@ -32,6 +32,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
+/**
+ * Dashscope视觉API实现类
+ * 
+ * 该类实现了VisionAPI接口，用于处理基于Dashscope的视觉识别功能。
+ * 支持多种输入方式（URI、文件路径、输入流）的图片识别。
+ */
 @Component
 @Slf4j
 @ConditionalOnProperty(name = "app.models.providers.dashscope.vision")
@@ -41,6 +47,14 @@ public class DashscopeVision implements VisionAPI {
 
     private final String model;
 
+    /**
+     * 构造函数
+     * 
+     * 初始化Dashscope视觉API客户端和模型配置。
+     * 
+     * @param chatModel 聊天模型
+     * @param modelProperties 模型配置属性
+     */
     public DashscopeVision(ChatModel chatModel, ModelProperties modelProperties) {
         // 构造时，可以设置 ChatClient 的参数
         // {@link org.springframework.ai.chat.client.ChatClient};
@@ -53,6 +67,15 @@ public class DashscopeVision implements VisionAPI {
         this.model = modelProperties.providers().get("dashscope").vision();
     }
 
+    /**
+     * 构建消息列表
+     * 
+     * 根据请求参数构建包含图片媒体的消息列表。
+     * 支持URI、文件路径和输入流三种图片输入方式。
+     * 
+     * @param request 基础AI请求参数
+     * @return 消息列表
+     */
     @Override
     public List<Message> buildMessages(BaseAiRequest request) {
         List<Message> messages = VisionAPI.super.buildMessages(request);
@@ -104,6 +127,16 @@ public class DashscopeVision implements VisionAPI {
         return messages;
     }
 
+    /**
+     * 图像分析
+     * 
+     * 使用Dashscope视觉模型对图像进行分析，返回指定类型的识别结果。
+     * 
+     * @param request 视觉请求参数
+     * @param clazz 返回结果的类型
+     * @param <T> 泛型类型
+     * @return 识别结果
+     */
     @Override
     public <T> T imageAnalyze(AiVisionRequest request, Class<T> clazz) {
         log.info("imageAnalyze request: {}", JSONObject.toJSONString(request));
@@ -119,6 +152,11 @@ public class DashscopeVision implements VisionAPI {
         return t;
     }
 
+    /**
+     * 获取模型名称
+     * 
+     * @return 当前使用的视觉模型名称
+     */
     @Override
     public String getModel() {
         return model;

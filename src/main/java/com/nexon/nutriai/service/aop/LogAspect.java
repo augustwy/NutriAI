@@ -24,6 +24,12 @@ import reactor.core.scheduler.Schedulers;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 
+/**
+ * 日志切面类
+ * 
+ * 使用AOP技术对带有@LogAnnotation注解的方法进行日志记录。
+ * 支持普通请求、登录请求和对话请求三种类型的日志记录。
+ */
 @Slf4j
 @Aspect
 @Component
@@ -35,11 +41,26 @@ public class LogAspect {
     private final DialogueDetailRepository dialogueDetailRepository;
     private final SingleRequestLogRepository singleRequestLogRepository;
 
+    /**
+     * 定义切点
+     * 
+     * 匹配所有带有@LogAnnotation注解的方法。
+     */
     @Pointcut("@annotation(com.nexon.nutriai.constant.annotaion.LogAnnotation)")
     public void logPointcut() {
         // 定义切点
     }
 
+    /**
+     * 环绕通知
+     * 
+     * 对目标方法进行环绕增强，记录方法执行时间、结果等信息。
+     * 根据请求类型分发到不同的处理方法。
+     * 
+     * @param joinPoint 连接点
+     * @return 目标方法的返回值
+     * @throws Throwable 可能抛出的异常
+     */
     @Around("logPointcut()")
     public Object logAround(ProceedingJoinPoint joinPoint) throws Throwable {
         long startTime = System.currentTimeMillis();
@@ -70,6 +91,16 @@ public class LogAspect {
         };
     }
 
+    /**
+     * 处理登录请求日志
+     * 
+     * @param joinPoint 连接点
+     * @param result 方法执行结果
+     * @param methodName 方法名
+     * @param description 方法描述
+     * @param startTime 开始时间
+     * @return 处理后的结果
+     */
     private Object handleLoginRequest(ProceedingJoinPoint joinPoint, Object result, String methodName, String description, long startTime) {
         if (result instanceof Mono<?> monoResult) {
             return monoResult
@@ -91,11 +122,27 @@ public class LogAspect {
         }
     }
 
+    /**
+     * 处理登录失败情况
+     * 
+     * @param joinPoint 连接点
+     * @param methodName 方法名
+     * @param description 方法描述
+     * @param errorMessage 错误信息
+     */
     private void handleLoginFailure(ProceedingJoinPoint joinPoint, String methodName, String description, String errorMessage) {
         log.error("========== 登录执行失败: {}, 错误: {} ==========", description.isEmpty() ? methodName : description, errorMessage);
         saveLoginLog(joinPoint, false, errorMessage, getLoginType(methodName));
     }
 
+    /**
+     * 获取登录类型
+     * 
+     * 根据方法名判断登录类型（微信登录或密码登录）。
+     * 
+     * @param methodName 方法名
+     * @return 登录类型
+     */
     private String getLoginType(String methodName) {
         if (methodName.contains("signInWithOpenId")) {
             return "WECHAT";
@@ -105,6 +152,16 @@ public class LogAspect {
         return "UNKNOWN";
     }
 
+    /**
+     * 处理对话请求日志
+     * 
+     * @param joinPoint 连接点
+     * @param result 方法执行结果
+     * @param methodName 方法名
+     * @param description 方法描述
+     * @param startTime 开始时间
+     * @return 处理后的结果
+     */
     private Object handleDialogueRequest(ProceedingJoinPoint joinPoint, Object result, String methodName, String description, long startTime) {
         String chatId = null;
         String phone = null;
@@ -166,6 +223,16 @@ public class LogAspect {
         }
     }
 
+    /**
+     * 处理普通请求日志
+     * 
+     * @param joinPoint 连接点
+     * @param result 方法执行结果
+     * @param methodName 方法名
+     * @param description 方法描述
+     * @param startTime 开始时间
+     * @return 处理后的结果
+     */
     private Object handleNormalRequest(ProceedingJoinPoint joinPoint, Object result, String methodName, String description, long startTime) {
         if (result instanceof Mono<?> monoResult) {
             return monoResult
@@ -206,6 +273,15 @@ public class LogAspect {
         }
     }
 
+    /**
+     * 保存对话日志
+     * 
+     * @param chatId 会话ID
+     * @param phone 用户手机号
+     * @param question 用户问题
+     * @param response AI回答
+     * @param methodName 方法名
+     */
     private void saveDialogueLog(String chatId, String phone, String question, String response, String methodName) {
         executeAsync(() -> {
             try {
@@ -248,6 +324,16 @@ public class LogAspect {
         });
     }
 
+    /**
+     * 保存单次请求日志
+     * 
+     * @param methodName 方法名
+     * @param args 方法参数
+     * @param result 方法执行结果
+     * @param errorMessage 错误信息
+     * @param executeTime 执行时间
+     * @param success 是否成功
+     */
     private void saveSingleRequestLog(String methodName, Object[] args, Object result, String errorMessage, int executeTime, boolean success) {
         executeAsync(() -> {
             try {
@@ -265,6 +351,14 @@ public class LogAspect {
         });
     }
 
+    /**
+     * 保存登录日志
+     * 
+     * @param joinPoint 连接点
+     * @param success 是否成功
+     * @param failureReason 失败原因
+     * @param loginType 登录类型
+     */
     private void saveLoginLog(ProceedingJoinPoint joinPoint, boolean success, String failureReason, String loginType) {
         executeAsync(() -> {
             try {
@@ -281,12 +375,25 @@ public class LogAspect {
         });
     }
 
+    /**
+     * 异步执行任务
+     * 
+     * 使用boundedElastic线程池异步执行任务，避免阻塞主线程。
+     * 
+     * @param task 要执行的任务
+     */
     private void executeAsync(Runnable task) {
         Mono.fromRunnable(task)
                 .subscribeOn(Schedulers.boundedElastic())
                 .subscribe();
     }
 
+    /**
+     * 从参数中提取用户名
+     * 
+     * @param args 参数数组
+     * @return 用户名（手机号）
+     */
     private String extractUsernameFromArgs(Object[] args) {
         for (Object arg : args) {
             if (arg instanceof String str && str.matches("^1[3-9]\\d{9}$")) {
