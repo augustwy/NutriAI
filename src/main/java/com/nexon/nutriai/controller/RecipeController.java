@@ -31,6 +31,7 @@ public class RecipeController {
 
     @GetMapping(value = "/recommend", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<String> recommend(@RequestParam String question, ServerWebExchange exchange) {
+        log.info("recommend question: {}",  question);
         String phone = WebFluxUtil.getPhone(exchange);
         String chatId = WebFluxUtil.getChatId(exchange);
         if (chatId == null) {
@@ -58,7 +59,7 @@ public class RecipeController {
         log.info("getStream");
         return Flux.interval(Duration.ofSeconds(1))
                 .map(i -> "Data " + i + " at " + System.currentTimeMillis())
-                .take(10);
+                .take(100);
     }
 
     @GetMapping(value = "/test")

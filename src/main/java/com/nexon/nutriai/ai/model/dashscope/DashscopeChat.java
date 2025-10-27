@@ -1,10 +1,10 @@
 package com.nexon.nutriai.ai.model.dashscope;
 
 import com.alibaba.cloud.ai.dashscope.chat.DashScopeChatOptions;
-import com.alibaba.cloud.ai.memory.jdbc.H2ChatMemoryRepository;
 import com.nexon.nutriai.ai.ChatAPI;
 import com.nexon.nutriai.ai.common.AiTool;
 import com.nexon.nutriai.config.properties.ModelProperties;
+import com.nexon.nutriai.dao.repository.H2ChatMemoryRepository;
 import com.nexon.nutriai.pojo.ChatHistory;
 import com.nexon.nutriai.pojo.request.BaseAiRequest;
 import lombok.extern.slf4j.Slf4j;
