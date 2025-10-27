@@ -1,6 +1,6 @@
-package com.nexon.nutriai.repository;
+package com.nexon.nutriai.dao.repository;
 
-import com.nexon.nutriai.repository.entity.LoginLog;
+import com.nexon.nutriai.dao.entity.LoginLog;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

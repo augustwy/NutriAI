@@ -1,4 +1,4 @@
-package com.nexon.nutriai.repository.entity;
+package com.nexon.nutriai.dao.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -13,7 +13,11 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "dialogue_detail")
+@Table(name = "dialogue_detail", 
+       indexes = {
+           @Index(name = "session_id_dialogue_detail_idx", columnList = "session_id"),
+           @Index(name = "session_id_sequence_idx", columnList = "session_id,sequence")
+       })
 public class DialogueDetail {
 
     @Id

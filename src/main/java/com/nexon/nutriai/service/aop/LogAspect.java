@@ -1,14 +1,14 @@
 package com.nexon.nutriai.service.aop;
 
 import com.nexon.nutriai.constant.annotaion.LogAnnotation;
-import com.nexon.nutriai.repository.DialogueDetailRepository;
-import com.nexon.nutriai.repository.DialogueSessionRepository;
-import com.nexon.nutriai.repository.LoginLogRepository;
-import com.nexon.nutriai.repository.SingleRequestLogRepository;
-import com.nexon.nutriai.repository.entity.DialogueDetail;
-import com.nexon.nutriai.repository.entity.DialogueSession;
-import com.nexon.nutriai.repository.entity.LoginLog;
-import com.nexon.nutriai.repository.entity.SingleRequestLog;
+import com.nexon.nutriai.dao.repository.DialogueDetailRepository;
+import com.nexon.nutriai.dao.repository.DialogueSessionRepository;
+import com.nexon.nutriai.dao.repository.LoginLogRepository;
+import com.nexon.nutriai.dao.repository.SingleRequestLogRepository;
+import com.nexon.nutriai.dao.entity.DialogueDetail;
+import com.nexon.nutriai.dao.entity.DialogueSession;
+import com.nexon.nutriai.dao.entity.LoginLog;
+import com.nexon.nutriai.dao.entity.SingleRequestLog;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;

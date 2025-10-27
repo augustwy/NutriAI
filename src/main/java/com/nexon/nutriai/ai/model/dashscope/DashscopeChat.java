@@ -1,20 +1,18 @@
 package com.nexon.nutriai.ai.model.dashscope;
 
 import com.alibaba.cloud.ai.dashscope.chat.DashScopeChatOptions;
+import com.alibaba.cloud.ai.memory.jdbc.H2ChatMemoryRepository;
 import com.nexon.nutriai.ai.ChatAPI;
 import com.nexon.nutriai.ai.common.AiTool;
 import com.nexon.nutriai.config.properties.ModelProperties;
 import com.nexon.nutriai.pojo.ChatHistory;
 import com.nexon.nutriai.pojo.request.BaseAiRequest;
-import com.nexon.nutriai.repository.H2ChatMemoryRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
-import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
-import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -34,7 +32,6 @@ public class DashscopeChat implements ChatAPI {
     private final ChatMemory messageWindowChatMemory;
 
     private final String model;
-
 
     public DashscopeChat(ChatModel chatModel, ModelProperties modelProperties, H2ChatMemoryRepository h2ChatMemoryRepository) {
         this.model = modelProperties.providers().get("dashscope").chat();

@@ -1,6 +1,6 @@
 package com.nexon.nutriai.config.bean;
 
-import com.nexon.nutriai.repository.H2ChatMemoryRepository;
+import com.alibaba.cloud.ai.memory.jdbc.H2ChatMemoryRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

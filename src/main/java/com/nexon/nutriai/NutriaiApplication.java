@@ -13,7 +13,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  */
 @ConfigurationPropertiesScan
 @SpringBootApplication
-@EnableJpaRepositories(basePackages = "com.nexon.nutriai.repository")
+@EnableJpaRepositories(basePackages = "com.nexon.nutriai.dao.repository")
 public class NutriaiApplication {
     /**
      * 应用程序入口点

@@ -1,4 +1,4 @@
-package com.nexon.nutriai.repository.entity;
+package com.nexon.nutriai.dao.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;

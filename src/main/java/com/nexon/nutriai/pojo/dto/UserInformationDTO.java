@@ -1,8 +1,8 @@
 package com.nexon.nutriai.pojo.dto;
 
-import com.nexon.nutriai.repository.entity.AppUser;
-import com.nexon.nutriai.repository.entity.UserHealthGoal;
-import com.nexon.nutriai.repository.entity.UserProfile;
+import com.nexon.nutriai.dao.entity.AppUser;
+import com.nexon.nutriai.dao.entity.UserHealthGoal;
+import com.nexon.nutriai.dao.entity.UserProfile;
 
 public record UserInformationDTO(AppUser appUser, UserProfile userProfile, UserHealthGoal userHealthGoal) {
 
