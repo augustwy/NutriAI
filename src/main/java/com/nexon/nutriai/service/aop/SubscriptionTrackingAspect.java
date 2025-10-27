@@ -1,4 +1,4 @@
-package com.nexon.nutriai.config.aop;
+package com.nexon.nutriai.service.aop;
 
 import com.nexon.nutriai.constant.annotaion.TrackSubscription;
 import lombok.extern.slf4j.Slf4j;

@@ -2,6 +2,7 @@ package com.nexon.nutriai.service;
 
 import com.alibaba.fastjson2.JSONObject;
 import com.nexon.nutriai.constant.ErrorCode;
+import com.nexon.nutriai.constant.annotaion.LogAnnotation;
 import com.nexon.nutriai.exception.NutriaiException;
 import com.nexon.nutriai.pojo.dto.UserHealthGoalDTO;
 import com.nexon.nutriai.pojo.dto.UserInformationDTO;
@@ -40,6 +41,7 @@ public class UserService {
 
     private final Cache<String, UserInformationDTO> userCache;
 
+    @LogAnnotation(value = "signUp", requestType = LogAnnotation.RequestType.NORMAL)
     public void signUp(String phone, String name, String password) {
         log.info("Sign up: {}, {}", phone, name);
         Optional<AppUser> optional = userRepository.findById(phone);
@@ -66,6 +68,7 @@ public class UserService {
      * @param password
      * @return
      */
+    @LogAnnotation(value = "signIn", requestType = LogAnnotation.RequestType.LOGIN)
     public AppUser signIn(String phone, String password) {
         log.info("signIn: {}", phone);
         Optional<AppUser> optional = userRepository.findById(phone);
@@ -84,6 +87,7 @@ public class UserService {
         return appUser;
     }
 
+    @LogAnnotation(value = "signInWithOpenId", requestType = LogAnnotation.RequestType.LOGIN)
     public AppUser signInWithOpenId(String phone, String openId) {
         Optional<AppUser> optional = userRepository.findById(phone);
         if (optional.isEmpty()) {

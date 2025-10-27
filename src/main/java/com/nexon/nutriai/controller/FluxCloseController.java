@@ -1,6 +1,6 @@
 package com.nexon.nutriai.controller;
 
-import com.nexon.nutriai.config.aop.SubscriptionTrackingAspect;
+import com.nexon.nutriai.service.aop.SubscriptionTrackingAspect;
 import com.nexon.nutriai.pojo.response.BaseResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PathVariable;

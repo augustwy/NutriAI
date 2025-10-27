@@ -25,7 +25,7 @@ import java.time.Duration;
 @RestController
 @RequestMapping("/web/recipe")
 @RequiredArgsConstructor
-public class RecipeController extends BaseController {
+public class RecipeController {
 
     private final RecipeService recipeService;
 

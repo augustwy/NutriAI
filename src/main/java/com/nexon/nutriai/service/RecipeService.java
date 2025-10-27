@@ -36,7 +36,7 @@ public class RecipeService {
     }
 
     @TrackSubscription(value = "recommend", streamIdParamName = "chatId")
-    @LogAnnotation
+    @LogAnnotation(value = "recognize", requestType = LogAnnotation.RequestType.DIALOGUE)
     public Flux<String> recommendRecipe(BaseRequest request, String question) {
         BaseAiRequest baseAiRequest = new BaseAiRequest(request);
         baseAiRequest.setSystemPrompt(PromptConstant.RECOMMEND_RECIPE_SYSTEM_PROMPT);

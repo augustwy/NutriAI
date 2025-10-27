@@ -37,7 +37,7 @@ public class FoodRecognitionService {
     private final UserTools userTools;
 
     @Transactional
-    @LogAnnotation
+    @LogAnnotation(value = "recognize", requestType = LogAnnotation.RequestType.NORMAL)
     public FoodIdentificationRes recognize(String filePath, BaseRequest request) {
         AiVisionRequest aiVisionRequest = new AiVisionRequest(request);
         aiVisionRequest.add(filePath);
@@ -57,7 +57,7 @@ public class FoodRecognitionService {
     }
 
     @TrackSubscription(value = "nutritionReport", streamIdParamName = "chatId")
-    @LogAnnotation
+    @LogAnnotation(value = "recognize", requestType = LogAnnotation.RequestType.NORMAL)
     public Flux<String> nutritionReport(FoodIdentification identification, BaseRequest request) {
         // 获取模板参数
         Map<String, Object> templateParams = identification.toTemplateParameters();

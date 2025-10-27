@@ -10,4 +10,13 @@ import java.lang.annotation.Target;
 public @interface LogAnnotation {
 
     String value() default "";
+
+    // 添加请求类型枚举
+    RequestType requestType() default RequestType.NORMAL;
+
+    enum RequestType {
+        NORMAL,     // 普通请求
+        DIALOGUE,   // 对话请求
+        LOGIN       // 登录请求
+    }
 }
