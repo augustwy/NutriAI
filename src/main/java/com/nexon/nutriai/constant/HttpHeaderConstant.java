@@ -11,4 +11,6 @@ public class HttpHeaderConstant {
     public static final String RESPONSE_HEADER_CHAT_ID = REQUEST_HEADER_CHAT_ID;
 
     public static final String RESPONSE_HEADER_MODEL = "X-Model";
+
+    public static final String RESPONSE_HEADER_CONTENT_TYPE = "X-Content-Type";
 }

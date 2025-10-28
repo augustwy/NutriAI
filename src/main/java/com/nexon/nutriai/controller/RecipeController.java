@@ -58,8 +58,8 @@ public class RecipeController {
     public Flux<String> getStream() {
         log.info("getStream");
         return Flux.interval(Duration.ofSeconds(1))
-                .map(i -> "Data " + i + " at " + System.currentTimeMillis())
-                .take(100);
+                .map(i -> " Data " + i + " at " + System.currentTimeMillis())
+                .take(10);
     }
 
     @GetMapping(value = "/test")

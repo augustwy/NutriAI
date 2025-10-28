@@ -59,6 +59,11 @@ public class HeaderWebFilter implements WebFilter {
             if (StringUtils.isNotEmpty(mockPhone)) {
                 exchange.getAttributes().put(WebFluxUtil.CURRENT_USER_ATTR, mockPhone);
             }
+
+            String chatId = request.getHeaders().getFirst(HttpHeaderConstant.REQUEST_HEADER_CHAT_ID);
+            if (StringUtils.isNotEmpty(chatId)) {
+                exchange.getAttributes().put(WebFluxUtil.CHAT_ID_ATTR, chatId);
+            }
             return chain.filter(exchange);
         }
 

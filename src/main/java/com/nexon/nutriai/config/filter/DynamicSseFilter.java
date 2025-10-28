@@ -45,9 +45,15 @@ public class DynamicSseFilter implements WebFilter {
 
         String chatId = determineAndSetChatId(exchange);
         String model = exchange.getResponse().getHeaders().getFirst(HttpHeaderConstant.RESPONSE_HEADER_MODEL);
+        String contentType = exchange.getResponse().getHeaders().getFirst(HttpHeaderConstant.RESPONSE_HEADER_CONTENT_TYPE);
+        if (StringUtils.isEmpty(contentType)) {
+            // 默认是普通消息
+            contentType = "message";
+            exchange.getResponse().getHeaders().set(HttpHeaderConstant.RESPONSE_HEADER_CONTENT_TYPE, contentType);
+        }
 
         // 创建转换上下文
-        SseContext context = new SseContext(chatId, model, exchange.getResponse().bufferFactory(), new ObjectMapper());
+        SseContext context = new SseContext(chatId, model, contentType, exchange.getResponse().bufferFactory(), new ObjectMapper());
 
         // 从工厂获取转换器
 

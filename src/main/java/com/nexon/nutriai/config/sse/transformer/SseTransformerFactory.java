@@ -13,16 +13,17 @@ public class SseTransformerFactory {
     private final Map<String, SseTransformer> transformerMap;
 
     // 通过构造器注入所有实现了 SseTransformer 接口的 Bean
-    public SseTransformerFactory(OpenAiSseTransformer openAiTransformer, BasicSseTransformer basicTransformer) {
+    public SseTransformerFactory(OpenAiSseTransformer openAiTransformer, BasicSseTransformer basicTransformer, NutriAiSseTransformer nutriAiTransformer) {
         this.transformerMap = Map.of(
                 "OpenAI", openAiTransformer,
-                "Basic", basicTransformer
+                "Basic", basicTransformer,
+                "NutriAi", nutriAiTransformer
         );
     }
 
     /**
      * 根据格式名称获取转换器。
-     * @param formatName 格式名称（如 "OpenAI", "Basic"）
+     * @param formatName 格式名称（如 "OpenAI", "Basic", "NutriAi"）
      * @return 对应的转换器实例，如果未找到则返回 空 作为默认值。
      */
     public SseTransformer getTransformer(String formatName) {
