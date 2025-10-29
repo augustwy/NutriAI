@@ -14,6 +14,8 @@ spring:
     dashscope:
       chat:
         api-key: ${AI_DASHSCOPE_API_KEY}
+      embedding:
+        api-key: ${AI_DASHSCOPE_API_KEY}
   jpa:
     database: h2
     show-sql: true
@@ -56,6 +58,7 @@ app:
         vision: qwen3-vl-plus
         text: qwen-flash
         chat: qwen-flash
+        embed: qwen3-rerank
   jwt:
     secret: 0iAKwlb7ZP4OG5qlRYCIGdrfKwNRJ6K5QhRZJqVhxf8=
     excludePaths:

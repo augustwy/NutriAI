@@ -8,7 +8,7 @@ import java.util.Map;
 @ConfigurationProperties("app.models")
 public record ModelProperties(Map<String, ServiceMo> providers) {
 
-    public record ServiceMo(String chat, String vision, String text) {
+    public record ServiceMo(String chat, String vision, String text, String embed) {
     }
 
     public ModelProperties {
