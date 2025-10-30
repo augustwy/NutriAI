@@ -8,6 +8,9 @@ spring:
   webflux:
     base-path: /nutri-ai
   ai:
+    autoconfigure:
+      exclude:
+        - "org.springframework.ai.vectorstore.milvus.MilvusVectorStoreAutoConfiguration"
     chat:
       client:
         enabled: false
@@ -16,6 +19,14 @@ spring:
         api-key: ${AI_DASHSCOPE_API_KEY}
       embedding:
         api-key: ${AI_DASHSCOPE_API_KEY}
+        options:
+          model: qwen3-rerank
+    vectorstore:
+      milvus:
+        database-name: "default"
+        collection-name: "documents"
+        metric-type: "COSINE"
+        index-type: "HNSW"
   jpa:
     database: h2
     show-sql: true
@@ -76,6 +87,6 @@ app:
     allow-credentials: false
     max-age: 3600
 
-lancedb:
+milvus:
   python:
-    enable: false
+    enable: true

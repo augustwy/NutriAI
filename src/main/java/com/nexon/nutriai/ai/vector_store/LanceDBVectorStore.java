@@ -5,6 +5,7 @@ import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.ai.vectorstore.filter.Filter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
@@ -14,6 +15,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Component
+@ConditionalOnProperty(name = "lancedb.python.enable", havingValue = "true", matchIfMissing = false)
 public class LanceDBVectorStore implements VectorStore {
     
     private final ReactiveLanceDBClient lanceDBClient;

@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Getter
-public class AiEmbedRequest extends BaseAiRequest {
+public class AiEmbedRequest extends BaseRequest {
 
     private List<URI> uris;
 
@@ -22,15 +22,9 @@ public class AiEmbedRequest extends BaseAiRequest {
         super();
     }
 
-    public AiEmbedRequest(BaseRequest baseRequest) {
-        super(baseRequest);
-    }
-
-    public AiEmbedRequest(BaseAiRequest baseAiRequest) {
-        super(baseAiRequest);
-        this.setContent(baseAiRequest.getContent());
-        this.setSystemPrompt(baseAiRequest.getSystemPrompt());
-        this.setContext(baseAiRequest.getContext());
+    public AiEmbedRequest(String fileType) {
+        super();
+        this.fileType = fileType;
     }
 
     public void add(URI uri) {

@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-@ConditionalOnProperty(name = "lancedb.python.enable", havingValue = "true")
 public class ReactiveLanceDBClient {
 
     private final WebClient webClient;
