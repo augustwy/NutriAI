@@ -1,6 +1,5 @@
 server:
   port: 8080
-  address: 0.0.0.0
 
 spring:
   main:
@@ -8,9 +7,6 @@ spring:
   webflux:
     base-path: /nutri-ai
   ai:
-    autoconfigure:
-      exclude:
-        - "org.springframework.ai.vectorstore.milvus.MilvusVectorStoreAutoConfiguration"
     chat:
       client:
         enabled: false
@@ -21,14 +17,6 @@ spring:
         api-key: ${AI_DASHSCOPE_API_KEY}
         options:
           model: qwen3-rerank
-          dimensions: 768
-          text_type: text
-    vectorstore:
-      milvus:
-        database-name: "default"
-        collection-name: "documents"
-        metric-type: "COSINE"
-        index-type: "HNSW"
   jpa:
     database: h2
     show-sql: true
@@ -88,7 +76,7 @@ app:
       - "*"
     allow-credentials: false
     max-age: 3600
-
-milvus:
-  python:
-    enable: false
+vectorex:
+  enable: true
+  packages:
+    - io.github.javpower.vectorextest.model
