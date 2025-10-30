@@ -75,3 +75,7 @@ app:
       - "*"
     allow-credentials: false
     max-age: 3600
+
+lancedb:
+  python:
+    enable: false
