@@ -23,6 +23,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.encoding>UTF-8</maven.compiler.encoding>
         <maven.test.skip>true</maven.test.skip>
+
+        <spring-ai.version>1.0.1</spring-ai.version>
     </properties>
 
     <dependencies>
@@ -135,6 +137,14 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+
+            <dependency>
+                <groupId>org.springframework.ai</groupId>
+                <artifactId>spring-ai-bom</artifactId>
+                <version>${spring-ai.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -170,6 +180,45 @@
                     </annotationProcessorPaths>
                 </configuration>
             </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>3.4.1</version>
+                <executions>
+                    <execution>
+                        <id>enforce-banned-dependencies</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <!-- 这是我们添加的核心规则：检测重复类 -->
+                                <banDuplicateClasses>
+                                    <ignoreClasses>
+                                        <!-- 通常可以忽略一些无关紧要的重复类，例如日志接口 -->
+                                        <!-- <ignoreClass>org.apache.commons.logging.*</ignoreClass> -->
+                                        <!-- <ignoreClass>org.slf4j.*</ignoreClass> -->
+                                    </ignoreClasses>
+                                    <!-- 找到重复类时，构建失败 -->
+                                    <fail>true</fail>
+                                </banDuplicateClasses>
+                            </rules>
+                            <!-- 如果整个规则集都没有触发，则也视为失败，确保规则集被考虑 -->
+                            <failFast>true</failFast>
+                        </configuration>
+                    </execution>
+                </executions>
+                <!-- banDuplicateClasses 规则在 extra-enforcer-rules 中，需要添加此依赖 -->
+                <dependencies>
+                    <dependency>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>extra-enforcer-rules</artifactId>
+                        <version>1.7.0</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+
         </plugins>
     </build>
 </project>

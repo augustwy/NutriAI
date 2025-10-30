@@ -21,6 +21,8 @@ spring:
         api-key: ${AI_DASHSCOPE_API_KEY}
         options:
           model: qwen3-rerank
+          dimensions: 768
+          text_type: text
     vectorstore:
       milvus:
         database-name: "default"
@@ -89,4 +91,4 @@ app:
 
 milvus:
   python:
-    enable: true
+    enable: false

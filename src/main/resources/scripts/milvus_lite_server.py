@@ -64,10 +64,17 @@ if __name__ == "__main__":
         default_server.set_base_dir(args.data_dir)
         print(f"Milvus Lite data directory set to: {os.path.abspath(args.data_dir)}")
 
-        # 启动服务器并指定端口 (新API)
-        default_server.config.set("proxy_port", args.port)
-        default_server.start()
-        print(f"Attempting to start Milvus Lite on port: {args.port}")
+        try:
+            # 启动服务器并指定端口 (新API)
+            default_server.config.set("proxy_port", args.port)
+            default_server.start()
+            print(f"Attempting to start Milvus Lite on port: {args.port}")
+        except Exception as e:
+            print(f"🚨 Detailed error: {type(e).__name__}: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            print("SERVER_START_FAILED")
+            sys.exit(1)
 
         print("\n" + "="*50)
         print(f"🚀 Milvus Lite started successfully!")
