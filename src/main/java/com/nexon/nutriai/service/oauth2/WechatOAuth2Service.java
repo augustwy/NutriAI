@@ -2,7 +2,7 @@ package com.nexon.nutriai.service.oauth2;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nexon.nutriai.config.properties.WechatProperties;
+import com.nexon.nutriai.config.properties.WechatOption;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -13,12 +13,12 @@ import reactor.core.publisher.Mono;
 public class WechatOAuth2Service implements OAuth2Service {
 
     private final WebClient webClient;
-    private final WechatProperties wechatProperties; // 您之前的配置类
+    private final WechatOption wechatOption; // 您之前的配置类
     private final ObjectMapper objectMapper;
 
-    public WechatOAuth2Service(WebClient.Builder webClientBuilder, WechatProperties wechatProperties, ObjectMapper objectMapper) {
+    public WechatOAuth2Service(WebClient.Builder webClientBuilder, WechatOption wechatOption, ObjectMapper objectMapper) {
         this.webClient = webClientBuilder.build();
-        this.wechatProperties = wechatProperties;
+        this.wechatOption = wechatOption;
         this.objectMapper = objectMapper;
     }
 
@@ -31,8 +31,8 @@ public class WechatOAuth2Service implements OAuth2Service {
     public Mono<JsonNode> getAccessToken(String code) {
         String url = String.format(
                 "https://api.weixin.qq.com/sns/oauth2/access_token?appid=%s&secret=%s&code=%s&grant_type=authorization_code",
-                wechatProperties.getAppId(),
-                wechatProperties.getAppSecret(),
+                wechatOption.getAppId(),
+                wechatOption.getAppSecret(),
                 code
         );
         return webClient.get().uri(url).retrieve().bodyToMono(String.class)

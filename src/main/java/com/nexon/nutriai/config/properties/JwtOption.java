@@ -6,11 +6,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 @ConfigurationProperties("app.jwt")
-public record JwtProperties(
+public record JwtOption(
         List<String> excludePaths,
         String secret
 ) {
-    public JwtProperties {
+    public JwtOption {
         if (excludePaths == null) {
             excludePaths = new ArrayList<>();
         }

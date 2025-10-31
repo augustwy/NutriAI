@@ -3,7 +3,7 @@ package com.nexon.nutriai.ai.model.dashscope;
 import com.alibaba.cloud.ai.dashscope.chat.DashScopeChatOptions;
 import com.nexon.nutriai.ai.ChatAPI;
 import com.nexon.nutriai.ai.common.AiTool;
-import com.nexon.nutriai.config.properties.ModelProperties;
+import com.nexon.nutriai.config.properties.ModelOption;
 import com.nexon.nutriai.dao.repository.H2ChatMemoryRepository;
 import com.nexon.nutriai.pojo.ChatHistory;
 import com.nexon.nutriai.pojo.request.BaseAiRequest;
@@ -33,8 +33,8 @@ public class DashscopeChat implements ChatAPI {
 
     private final String model;
 
-    public DashscopeChat(ChatModel chatModel, ModelProperties modelProperties, H2ChatMemoryRepository h2ChatMemoryRepository) {
-        this.model = modelProperties.providers().get("dashscope").chat();
+    public DashscopeChat(ChatModel chatModel, ModelOption modelOption, H2ChatMemoryRepository h2ChatMemoryRepository) {
+        this.model = modelOption.providers().get("dashscope").chat();
         // 构造 ChatMemoryRepository 和 ChatMemory
         this.messageWindowChatMemory = MessageWindowChatMemory.builder()
                 .chatMemoryRepository(h2ChatMemoryRepository)

@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 @Setter
 @Component
 @ConfigurationProperties(prefix = "app.oauth2.wechat")
-public class WechatProperties {
+public class WechatOption {
     private String appId;
     private String appSecret;
     private String redirectUri;

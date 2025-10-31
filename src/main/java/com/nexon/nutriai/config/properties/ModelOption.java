@@ -6,12 +6,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 @ConfigurationProperties("app.models")
-public record ModelProperties(Map<String, ServiceMo> providers) {
+public record ModelOption(Map<String, ServiceMo> providers) {
 
     public record ServiceMo(String chat, String vision, String text, String embed) {
     }
 
-    public ModelProperties {
+    public ModelOption {
         if (providers == null) {
             providers = new HashMap<>();
         }

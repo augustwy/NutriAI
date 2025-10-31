@@ -18,6 +18,8 @@ public class AiEmbedRequest extends BaseRequest {
 
     private String fileType;
 
+    private String addModel = "append";
+
     public AiEmbedRequest() {
         super();
     }
@@ -46,5 +48,13 @@ public class AiEmbedRequest extends BaseRequest {
             inputStreams = new ArrayList<>();
         }
         inputStreams.add(inputStream);
+    }
+
+    public void setAddModel(String addModel) {
+        this.addModel = addModel;
+    }
+
+    public String getAddModel() {
+        return null != addModel ? addModel : "append";
     }
 }

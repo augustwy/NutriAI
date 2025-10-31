@@ -17,4 +17,8 @@ public class DocumentEmbeddingService {
         AiEmbedRequest aiEmbedRequest = new AiEmbedRequest();
         embedAPI.embed(aiEmbedRequest);
     }
+
+    public void query(String question) {
+        embedAPI.query(question);
+    }
 }

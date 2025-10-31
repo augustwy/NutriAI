@@ -1,6 +1,6 @@
 package com.nexon.nutriai.config.filter;
 
-import com.nexon.nutriai.config.properties.JwtProperties;
+import com.nexon.nutriai.config.properties.JwtOption;
 import com.nexon.nutriai.constant.HttpHeaderConstant;
 import com.nexon.nutriai.util.JwtUtil;
 import com.nexon.nutriai.util.WebFluxUtil;
@@ -34,7 +34,7 @@ public class HeaderWebFilter implements WebFilter {
     @Value("${app.env:PROD}")
     private String env;
 
-    private final JwtProperties jwtProperties;
+    private final JwtOption jwtOption;
     private final JwtUtil jwtUtil;
 
     @NotNull
@@ -107,7 +107,7 @@ public class HeaderWebFilter implements WebFilter {
     }
 
     private boolean isExcludePath(String requestURI) {
-        return jwtProperties.excludePaths().stream()
+        return jwtOption.excludePaths().stream()
                 .anyMatch(path -> matchesPath(path, requestURI));
     }
 

@@ -3,6 +3,7 @@ package com.nexon.nutriai.controller;
 import com.nexon.nutriai.pojo.response.BaseResponse;
 import com.nexon.nutriai.service.DocumentEmbeddingService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,6 +18,13 @@ public class DocumentEmbeddingController {
     @PostMapping("/embed")
     public BaseResponse<Void> embed() {
         documentEmbeddingService.embed("");
+
+        return BaseResponse.success();
+    }
+
+    @GetMapping("/query")
+    public BaseResponse<Void> query(String query) {
+        documentEmbeddingService.query(query);
 
         return BaseResponse.success();
     }

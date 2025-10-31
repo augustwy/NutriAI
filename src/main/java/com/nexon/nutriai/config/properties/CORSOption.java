@@ -9,7 +9,7 @@ import java.util.List;
 @Getter
 @Setter
 @ConfigurationProperties("app.cors")
-public class CORSProperties {
+public class CORSOption {
     private List<String> allowedOrigins = List.of("*");
     private List<String> allowedMethods = List.of("GET", "POST", "PUT", "DELETE");
     private List<String> allowedHeaders = List.of("*");

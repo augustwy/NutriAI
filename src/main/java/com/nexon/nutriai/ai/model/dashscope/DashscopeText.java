@@ -4,7 +4,7 @@ import com.alibaba.cloud.ai.dashscope.chat.DashScopeChatOptions;
 import com.alibaba.fastjson2.JSONObject;
 import com.nexon.nutriai.ai.TextAPI;
 import com.nexon.nutriai.ai.common.AiTool;
-import com.nexon.nutriai.config.properties.ModelProperties;
+import com.nexon.nutriai.config.properties.ModelOption;
 import com.nexon.nutriai.constant.ErrorCode;
 import com.nexon.nutriai.exception.NutriaiException;
 import com.nexon.nutriai.pojo.request.BaseAiRequest;
@@ -40,9 +40,9 @@ public class DashscopeText implements TextAPI {
      * 初始化Dashscope文本API客户端和模型配置。
      *
      * @param chatModel       聊天模型
-     * @param modelProperties 模型配置属性
+     * @param modelOption 模型配置属性
      */
-    public DashscopeText(ChatModel chatModel, ModelProperties modelProperties) {
+    public DashscopeText(ChatModel chatModel, ModelOption modelOption) {
         // 构造时，可以设置 ChatClient 的参数
         // {@link org.springframework.ai.chat.client.ChatClient};
         this.dashScopeChatClient = ChatClient.builder(chatModel)
@@ -51,7 +51,7 @@ public class DashscopeText implements TextAPI {
                 // 设置 ChatClient 中 ChatModel 的 Options 参数
                 .defaultOptions(DashScopeChatOptions.builder().withTopP(0.7).build()).build();
 
-        this.model = modelProperties.providers().get("dashscope").text();
+        this.model = modelOption.providers().get("dashscope").text();
     }
 
     /**

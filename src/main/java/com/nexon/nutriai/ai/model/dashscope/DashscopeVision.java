@@ -5,7 +5,7 @@ import com.alibaba.cloud.ai.dashscope.chat.MessageFormat;
 import com.alibaba.cloud.ai.dashscope.common.DashScopeApiConstants;
 import com.alibaba.fastjson2.JSONObject;
 import com.nexon.nutriai.ai.VisionAPI;
-import com.nexon.nutriai.config.properties.ModelProperties;
+import com.nexon.nutriai.config.properties.ModelOption;
 import com.nexon.nutriai.constant.ErrorCode;
 import com.nexon.nutriai.exception.NutriaiException;
 import com.nexon.nutriai.pojo.request.AiVisionRequest;
@@ -53,9 +53,9 @@ public class DashscopeVision implements VisionAPI {
      * 初始化Dashscope视觉API客户端和模型配置。
      * 
      * @param chatModel 聊天模型
-     * @param modelProperties 模型配置属性
+     * @param modelOption 模型配置属性
      */
-    public DashscopeVision(ChatModel chatModel, ModelProperties modelProperties) {
+    public DashscopeVision(ChatModel chatModel, ModelOption modelOption) {
         // 构造时，可以设置 ChatClient 的参数
         // {@link org.springframework.ai.chat.client.ChatClient};
         this.dashScopeChatClient = ChatClient.builder(chatModel)
@@ -64,7 +64,7 @@ public class DashscopeVision implements VisionAPI {
                 // 设置 ChatClient 中 ChatModel 的 Options 参数
                 .defaultOptions(DashScopeChatOptions.builder().withTopP(0.7).build()).build();
 
-        this.model = modelProperties.providers().get("dashscope").vision();
+        this.model = modelOption.providers().get("dashscope").vision();
     }
 
     /**
