@@ -13,7 +13,7 @@ public interface EmbedAPI extends AiAPI {
      * @param aiEmbedRequest
      * @return
      */
-    List<String> embed(AiEmbedRequest aiEmbedRequest);
+    void embed(AiEmbedRequest aiEmbedRequest);
 
     /**
      * 检索

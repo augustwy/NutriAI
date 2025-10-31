@@ -1,4 +1,4 @@
-package com.nexon.nutriai.ai.vectorex;
+package com.nexon.nutriai.ai.embed.vectorex;
 
 import io.github.javpower.vectorex.keynote.model.MetricType;
 import io.github.javpower.vectorexcore.annotation.VectoRexCollection;

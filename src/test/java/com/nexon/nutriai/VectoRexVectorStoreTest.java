@@ -1,6 +1,6 @@
 package com.nexon.nutriai;
 
-import com.nexon.nutriai.ai.vector_store.VectoRexVectorStore;
+import com.nexon.nutriai.ai.embed.vector_store.VectoRexVectorStore;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

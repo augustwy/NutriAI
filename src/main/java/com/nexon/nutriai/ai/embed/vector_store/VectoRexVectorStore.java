@@ -1,7 +1,7 @@
-package com.nexon.nutriai.ai.vector_store;
+package com.nexon.nutriai.ai.embed.vector_store;
 
-import com.nexon.nutriai.ai.vectorex.NutriDoc;
-import com.nexon.nutriai.ai.vectorex.NutriDocMapper;
+import com.nexon.nutriai.ai.embed.vectorex.NutriDoc;
+import com.nexon.nutriai.ai.embed.vectorex.NutriDocMapper;
 import com.nexon.nutriai.util.SpringBeanUtils;
 import io.github.javpower.vectorexbootstater.core.VectoRexResult;
 import io.github.javpower.vectorexcore.entity.VectoRexEntity;
@@ -51,7 +51,7 @@ public class VectoRexVectorStore implements VectorStore {
         }
         for (Document document : documents) {
             float[] embedding = this.embeddingModel.embed(document);
-            NutriDoc nutriDoc = new NutriDoc(document.getId(), document.getText(), embedding);
+            NutriDoc nutriDoc = new NutriDoc(document.getId(), document.getText(), embedding, document.getMetadata());
             nutriDocMapper.insert(nutriDoc);
         }
     }
@@ -83,7 +83,7 @@ public class VectoRexVectorStore implements VectorStore {
         List<VectoRexResult<NutriDoc>> query = nutriDocMapper.queryWrapper().vector("vector", toFloatList(embedding)).topK(2).query();
         if (query != null && !query.isEmpty()) {
             return query.stream()
-                    .map(result -> new Document(result.getEntity().getContent(), new HashMap<>()))
+                    .map(result -> new Document(result.getEntity().getContent(), result.getEntity().getMetadata()))
                     .toList();
         }
         return List.of();

@@ -1,4 +1,4 @@
-package com.nexon.nutriai.ai.vectorex;
+package com.nexon.nutriai.ai.embed.vectorex;
 
 import io.github.javpower.vectorexbootstater.mapper.VectorRexMapper;
 import org.springframework.stereotype.Component;

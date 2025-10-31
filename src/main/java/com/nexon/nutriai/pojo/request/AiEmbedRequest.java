@@ -1,57 +1,33 @@
 package com.nexon.nutriai.pojo.request;
 
+import com.nexon.nutriai.ai.embed.Knowledge;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Getter
 public class AiEmbedRequest extends BaseRequest {
 
-    private List<URI> uris;
-
-    private List<String> filePaths;
-
-    private List<InputStream> inputStreams;
-
-    private String fileType;
+    private List<Knowledge> knowledges;
 
     private String addModel = "append";
 
-    public AiEmbedRequest() {
+    public AiEmbedRequest(List<Knowledge> knowledges) {
         super();
-    }
-
-    public AiEmbedRequest(String fileType) {
-        super();
-        this.fileType = fileType;
-    }
-
-    public void add(URI uri) {
-        if (uris == null) {
-            uris = new ArrayList<>();
-        }
-        uris.add(uri);
-    }
-
-    public void add(String filePath) {
-        if (filePaths == null) {
-            filePaths = new ArrayList<>();
-        }
-        filePaths.add(filePath);
-    }
-
-    public void add(InputStream inputStream) {
-        if (inputStreams == null) {
-            inputStreams = new ArrayList<>();
-        }
-        inputStreams.add(inputStream);
-    }
-
-    public void setAddModel(String addModel) {
-        this.addModel = addModel;
+        this.knowledges = knowledges;
     }
 
     public String getAddModel() {

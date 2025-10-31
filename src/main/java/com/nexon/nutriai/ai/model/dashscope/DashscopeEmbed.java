@@ -1,8 +1,12 @@
 package com.nexon.nutriai.ai.model.dashscope;
 
 import com.nexon.nutriai.ai.EmbedAPI;
-import com.nexon.nutriai.ai.vector_store.VectoRexVectorStore;
+import com.nexon.nutriai.ai.embed.DocumentReader;
+import com.nexon.nutriai.ai.embed.Knowledge;
+import com.nexon.nutriai.ai.embed.TextSplitter;
+import com.nexon.nutriai.ai.embed.vector_store.VectoRexVectorStore;
 import com.nexon.nutriai.config.properties.ModelOption;
+import com.nexon.nutriai.exception.NutriaiException;
 import com.nexon.nutriai.pojo.request.AiEmbedRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.document.Document;
@@ -10,8 +14,9 @@ import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Spliterator;
 
 @Component
 @Slf4j
@@ -32,44 +37,26 @@ public class DashscopeEmbed implements EmbedAPI {
     }
 
     @Override
-    public List<String> embed(AiEmbedRequest aiEmbedRequest) {
+    public void embed(AiEmbedRequest aiEmbedRequest) {
+        if (aiEmbedRequest.getKnowledges() == null || aiEmbedRequest.getKnowledges().isEmpty()) {
+            throw new NutriaiException("请提供要嵌入的文档");
+        }
 
-        // 1. 解析文件
-        String content = "这是一个测试文档，用于验证向量数据库功能是否正常工作。";
+        for (Knowledge knowledge : aiEmbedRequest.getKnowledges()) {
+            log.info("正在处理文档: {}", knowledge.fileName());
+            try {
+                DocumentReader documentReader = new DocumentReader(knowledge);
+                Spliterator<String> spliterator = new TextSplitter(TextSplitter.SEMANTIC_BASED, 1000).split(documentReader.read());
+                spliterator.tryAdvance((String line) -> {
+                    // 处理每一行数据
+                    Document document = new Document(line, Map.of("name", knowledge.fileName()));
+                    vectorStore.add(List.of(document));
+                });
+            } catch (Exception e) {
+                log.error("处理文档时出错: ", e);
+                throw new NutriaiException("处理文档时出错: " + e.getMessage());
+            }
 
-        // 2. 分割文件
-        List<String> chunks = Arrays.asList(
-                "这是测试文档的第一部分。",
-                "这是测试文档的第二部分。",
-                "这是测试文档的第三部分。",
-                "其他数据。",
-                "20251031。",
-                "我想赚钱。",
-                "啊啊啊啊啊啊啊。"
-        );
-
-        // 3. 获取嵌入向量
-        List<Document> documents = chunks.stream()
-                .map(Document::new)
-                .toList();
-
-        // 4. 保存向量
-        try {
-
-            vectorStore.add(documents);
-            log.info("成功向向量数据库添加了 {} 个文档片段", documents.size());
-
-//            // 进行相似性搜索测试
-//            List<Document> similarDocs = vectorStore.similaritySearch("测试文档");
-//            log.info("相似性搜索返回了 {} 个结果", similarDocs.size());
-//            for (Document doc : similarDocs) {
-//                log.info("相似文档: {}", doc.getText());
-//            }
-
-            return chunks;
-        } catch (Exception e) {
-            log.error("向量数据库操作失败", e);
-            return List.of("向量数据库操作失败: " + e.getMessage());
         }
     }
 
