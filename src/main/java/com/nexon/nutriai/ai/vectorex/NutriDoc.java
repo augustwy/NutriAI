@@ -9,6 +9,7 @@ import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Getter
 @Setter
@@ -25,7 +26,14 @@ public class NutriDoc {
     )
     private List<Float> vector;
 
+    @VectoRexField
+    private Map<String, Object> metadata;
+
     public NutriDoc(String id, String content, float[] vector) {
+        new NutriDoc(id, content, vector, Map.of());
+    }
+
+    public NutriDoc(String id, String content, float[] vector, Map<String, Object> metadata) {
         this.id = id;
         this.content = content;
         if (vector != null) {
@@ -34,5 +42,6 @@ public class NutriDoc {
                 this.vector.add(f);
             }
         }
+        this.metadata = metadata;
     }
 }

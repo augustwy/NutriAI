@@ -1,6 +1,5 @@
 package com.nexon.nutriai.ai.model.dashscope;
 
-import com.alibaba.cloud.ai.dashscope.embedding.DashScopeEmbeddingModel;
 import com.nexon.nutriai.ai.EmbedAPI;
 import com.nexon.nutriai.ai.vector_store.VectoRexVectorStore;
 import com.nexon.nutriai.config.properties.ModelOption;
@@ -13,7 +12,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 @Component
 @Slf4j
