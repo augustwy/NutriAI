@@ -80,4 +80,4 @@ app:
 vectorex:
   enable: true
   packages:
-    - com.nexon.nutriai.ai.vectorex
+    - com.nexon.nutriai.ai.embed.vectorex

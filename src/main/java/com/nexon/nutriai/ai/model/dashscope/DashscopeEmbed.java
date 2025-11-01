@@ -43,20 +43,22 @@ public class DashscopeEmbed implements EmbedAPI {
         }
 
         for (Knowledge knowledge : aiEmbedRequest.getKnowledges()) {
-            log.info("正在处理文档: {}", knowledge.fileName());
+            log.info("正在处理文档: {}", knowledge.getFileName());
             try {
                 DocumentReader documentReader = new DocumentReader(knowledge);
                 Spliterator<String> spliterator = new TextSplitter(TextSplitter.SEMANTIC_BASED, 1000).split(documentReader.read());
-                spliterator.tryAdvance((String line) -> {
+                spliterator.forEachRemaining((String line) -> {
+                    log.info("正在处理行: {}", line.length() > 50 ? line.substring(0, 50) + "..." : line);
                     // 处理每一行数据
-                    Document document = new Document(line, Map.of("name", knowledge.fileName()));
+                    Document document = new Document(line, Map.of("name", knowledge.getFileName()));
                     vectorStore.add(List.of(document));
                 });
             } catch (Exception e) {
                 log.error("处理文档时出错: ", e);
                 throw new NutriaiException("处理文档时出错: " + e.getMessage());
+            } finally {
+                log.info("处理文档完成: {}", knowledge.getFileName());
             }
-
         }
     }
 

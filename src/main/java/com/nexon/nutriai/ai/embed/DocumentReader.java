@@ -52,11 +52,11 @@ public class DocumentReader {
      */
     private static class SourceReadingStrategyFactory {
         public static SourceReadingStrategy createStrategy(Knowledge knowledge) {
-            if (knowledge.inputStream() != null) {
+            if (knowledge.getInputStream() != null) {
                 return new StreamSourceReadingStrategy();
-            } else if (knowledge.filePath() != null) {
+            } else if (knowledge.getFilePath() != null) {
                 return new FileSourceReadingStrategy();
-            } else if (knowledge.uri() != null) {
+            } else if (knowledge.getUri() != null) {
                 return new UriSourceReadingStrategy();
             } else {
                 throw new IllegalStateException("未提供有效的输入源（inputStream、filePath 或 uri）");
@@ -71,7 +71,7 @@ public class DocumentReader {
         @Override
         public Spliterator<String> read(Knowledge knowledge) {
             FileTypeProcessingStrategy fileStrategy = FileTypeProcessingStrategyFactory.createStrategy(knowledge);
-            return fileStrategy.process(knowledge.inputStream());
+            return fileStrategy.process(knowledge.getInputStream());
         }
     }
 
@@ -81,11 +81,11 @@ public class DocumentReader {
     private static class FileSourceReadingStrategy implements SourceReadingStrategy {
         @Override
         public Spliterator<String> read(Knowledge knowledge) {
-            try (InputStream inputStream = new FileInputStream(knowledge.filePath())) {
+            try (InputStream inputStream = new FileInputStream(knowledge.getFilePath())) {
                 FileTypeProcessingStrategy fileStrategy = FileTypeProcessingStrategyFactory.createStrategy(knowledge);
                 return fileStrategy.process(inputStream);
             } catch (IOException e) {
-                throw new RuntimeException("无法读取文件: " + knowledge.filePath(), e);
+                throw new RuntimeException("无法读取文件: " + knowledge.getFilePath(), e);
             }
         }
     }
@@ -96,7 +96,7 @@ public class DocumentReader {
     private static class UriSourceReadingStrategy implements SourceReadingStrategy {
         @Override
         public Spliterator<String> read(Knowledge knowledge) {
-            URI uri = knowledge.uri();
+            URI uri = knowledge.getUri();
             if (uri.getScheme().equals("file")) {
                 try (InputStream inputStream = new FileInputStream(uri.getPath())) {
                     FileTypeProcessingStrategy fileStrategy = FileTypeProcessingStrategyFactory.createStrategy(knowledge);
@@ -132,7 +132,7 @@ public class DocumentReader {
      */
     private static class FileTypeProcessingStrategyFactory {
         public static FileTypeProcessingStrategy createStrategy(Knowledge knowledge) {
-            return switch (knowledge.fileType()) {
+            return switch (knowledge.getFileType()) {
                 case PDF -> new PdfFileTypeProcessingStrategy();
                 case WORD -> new WordFileTypeProcessingStrategy();
                 default ->

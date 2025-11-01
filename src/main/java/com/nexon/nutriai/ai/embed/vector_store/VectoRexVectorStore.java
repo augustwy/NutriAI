@@ -83,6 +83,7 @@ public class VectoRexVectorStore implements VectorStore {
         List<VectoRexResult<NutriDoc>> query = nutriDocMapper.queryWrapper().vector("vector", toFloatList(embedding)).topK(2).query();
         if (query != null && !query.isEmpty()) {
             return query.stream()
+                    .filter(result -> result != null && result.getScore() <= 0.5)
                     .map(result -> new Document(result.getEntity().getContent(), result.getEntity().getMetadata()))
                     .toList();
         }

@@ -17,7 +17,10 @@ public class DocumentEmbeddingController {
 
     @PostMapping("/embed")
     public BaseResponse<Void> embed() {
-        documentEmbeddingService.embed("");
+        String fileName = "第一章 营养学基础（知识库版）.docx";
+        String filePath = "E:\\xwechat_files\\wxid_arn2at1289ib21_8875\\msg\\file\\2025-11\\第一章 营养学基础（知识库版）.docx";
+        String fileType = "WORD";
+        documentEmbeddingService.embed(fileName, filePath, fileType);
 
         return BaseResponse.success();
     }
